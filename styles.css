@@ -204,11 +204,26 @@ li + li {
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin-bottom: 0.55rem;
+}
+
 .entry-title {
   color: var(--text);
   font-size: 1.2rem;
   font-weight: 600;
-  margin-bottom: 0.55rem;
+  margin-bottom: 0;
+}
+
+.entry-date {
+  color: var(--accent-pink);
+  font-size: 0.95rem;
+  margin-bottom: 0;
 }
 
 .footer {
