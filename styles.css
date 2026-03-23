@@ -1,12 +1,15 @@
 :root {
   --bg: #120f1c;
   --bg-glow: #211733;
-  --card: rgba(31, 23, 46, 0.84);
+  --bg-deeper: #0d0a14;
+  --card: rgba(31, 23, 46, 0.82);
+  --card-strong: rgba(42, 31, 62, 0.9);
   --card-border: rgba(255, 255, 255, 0.08);
   --text: #f4ecf7;
   --muted: #c9b8d4;
   --accent: #f0c674;
   --accent-soft: #d8a9ff;
+  --accent-pink: #f3b0d8;
   --shadow: rgba(0, 0, 0, 0.28);
 }
 
@@ -25,13 +28,26 @@ body {
   line-height: 1.65;
   color: var(--text);
   background:
-    radial-gradient(circle at top, rgba(122, 91, 196, 0.18), transparent 34%),
-    radial-gradient(circle at 20% 20%, rgba(240, 198, 116, 0.08), transparent 22%),
-    linear-gradient(180deg, var(--bg-glow) 0%, var(--bg) 45%, #0d0a14 100%);
+    radial-gradient(circle at top, rgba(122, 91, 196, 0.2), transparent 34%),
+    radial-gradient(circle at 20% 18%, rgba(240, 198, 116, 0.08), transparent 22%),
+    radial-gradient(circle at 80% 12%, rgba(243, 176, 216, 0.09), transparent 18%),
+    linear-gradient(180deg, var(--bg-glow) 0%, var(--bg) 45%, var(--bg-deeper) 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.08) 0.8px, transparent 0.8px);
+  background-size: 26px 26px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.32), transparent 72%);
+  opacity: 0.25;
 }
 
 .page {
-  width: min(100% - 2rem, 46rem);
+  width: min(100% - 2rem, 52rem);
   margin: 0 auto;
   padding: 4rem 0 2rem;
 }
@@ -49,6 +65,17 @@ body {
 .hero {
   padding-top: 2rem;
   padding-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: "✦";
+  position: absolute;
+  top: 1.15rem;
+  right: 1.35rem;
+  color: rgba(240, 198, 116, 0.5);
+  font-size: 1.2rem;
 }
 
 .eyebrow {
@@ -61,13 +88,15 @@ body {
 
 h1,
 h2,
+h3,
 p,
 ul {
   margin-top: 0;
 }
 
 h1,
-h2 {
+h2,
+h3 {
   font-weight: 600;
   line-height: 1.15;
 }
@@ -81,6 +110,11 @@ h1 {
 h2 {
   font-size: clamp(1.5rem, 4vw, 2rem);
   margin-bottom: 1rem;
+}
+
+h3 {
+  font-size: 1.15rem;
+  margin-bottom: 0.9rem;
 }
 
 p,
@@ -102,6 +136,7 @@ li {
 
 .status span,
 .entry-status span,
+.fact-list span,
 strong {
   color: var(--accent);
   font-weight: 600;
@@ -116,8 +151,53 @@ li + li {
   margin-top: 0.45rem;
 }
 
+.soft-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.little-box {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 1rem 1rem 0.85rem;
+}
+
+.fact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.fact-list li {
+  padding: 0.6rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fact-list li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.section-note {
+  font-size: 0.98rem;
+  color: var(--accent-pink);
+  margin-bottom: 0;
+}
+
 .journal .entry {
-  margin-top: 1.25rem;
+  margin-top: 1rem;
   padding: 1.1rem 1.15rem;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.03);
@@ -132,7 +212,7 @@ li + li {
 }
 
 .footer {
-  width: min(100% - 2rem, 46rem);
+  width: min(100% - 2rem, 52rem);
   margin: 0 auto;
   padding: 0 0 3rem;
 }
@@ -144,9 +224,15 @@ li + li {
   font-size: 0.98rem;
 }
 
+@media (max-width: 760px) {
+  .soft-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .page {
-    width: min(100% - 1rem, 46rem);
+    width: min(100% - 1rem, 52rem);
     padding-top: 1.5rem;
   }
 
