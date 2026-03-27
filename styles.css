@@ -242,6 +242,17 @@ li {
   margin-bottom: 0;
 }
 
+.contact-section a {
+  color: var(--accent-bright);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(183, 200, 186, 0.35);
+}
+
+.contact-section a:hover {
+  color: var(--text);
+  border-bottom-color: rgba(230, 226, 214, 0.55);
+}
+
 .section-head {
   margin-bottom: 1rem;
 }
