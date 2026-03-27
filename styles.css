@@ -145,6 +145,7 @@ li {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
+  object-position: top center;
   border-radius: 1.5rem;
   border: 1px solid var(--border);
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
