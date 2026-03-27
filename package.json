@@ -1,0 +1,7 @@
+{
+  "name": "brat-gg",
+  "private": true,
+  "scripts": {
+    "build:journal": "node scripts/build-journal.js"
+  }
+}
