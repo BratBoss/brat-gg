@@ -343,8 +343,14 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
+  .hero-grid {
+    gap: 1.5rem;
+  }
+
   .hero-portrait-wrap {
     max-width: 22rem;
+    width: min(100%, 22rem);
+    margin: 0 auto;
   }
 
   .facts-panel {
@@ -381,19 +387,131 @@ a:hover {
   }
 
   .page {
-    padding-top: 2.6rem;
+    padding-top: 2.4rem;
+    padding-bottom: 2.4rem;
+  }
+
+  h1 {
+    font-size: clamp(2.75rem, 15vw, 4rem);
+    margin-bottom: 0.55rem;
+  }
+
+  h2 {
+    font-size: clamp(1.45rem, 7vw, 2rem);
+    margin-bottom: 0.8rem;
   }
 
   p,
   li {
-    font-size: 1rem;
+    font-size: 0.98rem;
+    line-height: 1.65;
+  }
+
+  .eyebrow,
+  .section-label,
+  .entry-date {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
   }
 
   .hero {
-    padding-bottom: 2.8rem;
+    padding: 0.25rem 0 2.4rem;
+  }
+
+  .hero::after {
+    top: 0.15rem;
+    right: 0;
+  }
+
+  .hero-grid {
+    gap: 1.2rem;
+  }
+
+  .lede {
+    font-size: 1.03rem;
+    margin-bottom: 1rem;
+  }
+
+  .status-line {
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+  }
+
+  .hero-portrait-wrap {
+    width: min(100%, 18.5rem);
+  }
+
+  .hero-portrait {
+    aspect-ratio: 5 / 6;
+    border-radius: 1.2rem;
   }
 
   .section {
-    padding: 1.35rem 0 1.6rem;
+    padding: 1.25rem 0 1.45rem;
+  }
+
+  .intro-grid {
+    gap: 1.25rem;
+  }
+
+  .facts-panel {
+    padding: 1rem 1rem 0.85rem;
+    border-radius: 1.1rem;
+  }
+
+  .fact-list li {
+    padding: 0.62rem 0;
+  }
+
+  .timeline {
+    margin-top: 0.9rem;
+  }
+
+  .entry {
+    gap: 0.45rem;
+    padding: 0 0 1.4rem 1.35rem;
+  }
+
+  .entry-title {
+    font-size: 1.07rem;
+  }
+
+  .footer {
+    padding-bottom: 2.1rem;
+  }
+
+  .footer p {
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .page,
+  .footer {
+    width: min(100% - 0.9rem, 66rem);
+  }
+
+  .page {
+    padding-top: 2rem;
+  }
+
+  h1 {
+    font-size: clamp(2.35rem, 15vw, 3.1rem);
+  }
+
+  .hero-portrait-wrap {
+    width: min(100%, 16.5rem);
+  }
+
+  .hero-portrait {
+    border-radius: 1rem;
+  }
+
+  .facts-panel {
+    padding: 0.9rem 0.9rem 0.8rem;
+  }
+
+  .entry {
+    padding-left: 1.15rem;
   }
 }
