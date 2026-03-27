@@ -262,6 +262,10 @@ a:hover {
   margin-top: 1.2rem;
 }
 
+.journal-fallback {
+  color: var(--soft);
+}
+
 .timeline::before {
   content: "";
   position: absolute;
