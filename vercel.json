@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/.well-known/discord",
+      "destination": "/discord-verification.txt"
+    }
+  ]
+}
