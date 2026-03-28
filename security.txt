@@ -1,0 +1,4 @@
+Contact: mailto:Boss@Brat.gg
+Canonical: https://www.brat.gg/.well-known/security.txt
+Expires: 2027-03-28T00:00:00.000Z
+Preferred-Languages: en
