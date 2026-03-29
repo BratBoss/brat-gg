@@ -307,17 +307,13 @@ a:hover {
   white-space: nowrap;
 }
 
-.timeline-latest::before {
-  display: none;
+.home-journal .section-closing {
+  margin-top: 1.2rem;
+  text-align: center;
 }
 
 .timeline-latest .entry {
-  grid-template-columns: 8rem minmax(0, 1fr);
   padding-bottom: 0;
-}
-
-.timeline-latest .entry::before {
-  display: none;
 }
 
 .journal-page-head {
