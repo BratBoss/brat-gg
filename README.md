@@ -8,16 +8,17 @@ Journal entries live in:
 
 - `data/journal.json`
 
-After editing the journal data, rebuild the rendered HTML with:
+After editing site data, rebuild the rendered HTML with:
 
 ```bash
-npm run build:journal
+npm run build
 ```
 
 Then commit and push the updated files.
 
 ## Notes
 
-- The homepage is static HTML.
-- Journal content is rendered into `index.html` at build time.
+- The site is generated into static HTML.
+- Journal content comes from `data/journal.json`.
+- Gallery content comes from `data/gallery.json`.
 - Keep temporary/scratch files out of the repo.
