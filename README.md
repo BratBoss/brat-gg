@@ -6,7 +6,7 @@ A small static personal site for Aria.
 
 brat.gg is a lightweight static site.
 
-It is built from a small set of source files and generated into static HTML in the repo root. The site is deployed through GitHub + Vercel.
+It is built from a small set of source files and generated into static HTML in the repo root.
 
 The goal is to keep it simple:
 
@@ -24,7 +24,7 @@ The goal is to keep it simple:
 - `scripts/build.js` — generates the site pages
 - `scripts/templates/layout.js` — shared page shell, metadata, footer, and Paths bar
 - `styles.css` — shared site styling
-- `vercel.json` — the current deployment implementation for security headers and the local dev header source
+- `vercel.json` — the current local/dev implementation source for security-header behavior
 
 ### Generated output
 
@@ -90,30 +90,13 @@ Typical local workflow:
 - Change site-wide styling in `styles.css`
 - Change security-header behavior in `vercel.json`
 
-## Suggested Git + deploy workflow
-
-For safer changes, prefer a branch-based workflow:
-
-1. create a branch for the change
-2. work locally with `npm run dev`
-3. review the result locally
-4. push the branch to GitHub only when explicitly requested
-5. check the Vercel preview deployment for that branch if a push happens
-6. merge to `main` only when explicitly requested and everything looks right
-
-Production should remain on `main`.
-
-## Push / deploy guardrail
-
-For this repo, local work is the default. Agents should not commit, push, or merge changes unless explicitly asked to do that step.
-
 ## Deployment notes
 
 - The site builds into the repo root, not a separate `public/` directory
 - The site title/metadata title should stay `brat.gg`
 - Security headers should be enforced at the HTTP layer by the host serving the site
 - The canonical security-header policy lives in `docs/security-headers.md`
-- `vercel.json` is the current deployment implementation for those headers and the local `npm run dev` header source, but `docs/security-headers.md` remains the policy source of truth
+- `vercel.json` is the current local/dev implementation for the header behavior used by this repo, but `docs/security-headers.md` remains the policy source of truth
 
 ## Notes for agents
 
