@@ -144,20 +144,18 @@ li {
   gap: 1rem;
 }
 
-.gallery-item {
+.gallery-item,
+.gallery-item:link,
+.gallery-item:visited,
+.gallery-item:hover,
+.gallery-item:active,
+.gallery-item:focus {
+  all: unset;
   display: block;
+  cursor: pointer;
   line-height: 0;
   font-size: 0;
   color: transparent;
-  text-decoration: none !important;
-  border: 0 !important;
-  border-bottom: 0 !important;
-}
-
-.gallery-item:hover {
-  text-decoration: none !important;
-  border: 0 !important;
-  border-bottom: 0 !important;
 }
 
 .gallery-item img {
