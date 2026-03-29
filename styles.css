@@ -65,7 +65,7 @@ body::after {
 }
 
 .page {
-  padding: 5rem 0 3rem;
+  padding: 2rem 0 3rem;
 }
 
 h1,
@@ -96,6 +96,44 @@ p,
 li {
   font-size: 1.04rem;
   color: var(--muted);
+}
+
+.paths-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0 1.35rem;
+}
+
+.paths-strip .section-label {
+  margin: 0;
+}
+
+.paths-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.paths-nav a,
+.path-soon {
+  font-size: 0.96rem;
+  color: var(--soft);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.paths-nav a:hover,
+.paths-nav a[aria-current="page"] {
+  color: var(--text);
+  border-bottom-color: rgba(230, 226, 214, 0.45);
+}
+
+.path-soon {
+  color: rgba(174, 183, 171, 0.72);
+  cursor: default;
 }
 
 .hero {
@@ -257,6 +295,45 @@ a:hover {
   margin-bottom: 1rem;
 }
 
+.section-head-split {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.section-link {
+  align-self: center;
+  white-space: nowrap;
+}
+
+.timeline-latest::before {
+  display: none;
+}
+
+.timeline-latest .entry {
+  grid-template-columns: 8rem minmax(0, 1fr);
+  padding-bottom: 0;
+}
+
+.timeline-latest .entry::before {
+  display: none;
+}
+
+.journal-page-head {
+  padding-top: 0.6rem;
+  padding-bottom: 1.2rem;
+}
+
+.journal-page-head h1 {
+  font-size: clamp(2.2rem, 6vw, 3.6rem);
+  margin-bottom: 0;
+}
+
+.journal-archive {
+  padding-top: 1.1rem;
+}
+
 .timeline {
   position: relative;
   margin-top: 1.2rem;
@@ -347,6 +424,12 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
+  .paths-strip,
+  .section-head-split {
+    align-items: start;
+    flex-direction: column;
+  }
+
   .hero-grid {
     gap: 1.5rem;
   }
@@ -391,7 +474,7 @@ a:hover {
   }
 
   .page {
-    padding-top: 2.4rem;
+    padding-top: 1.6rem;
     padding-bottom: 2.4rem;
   }
 
@@ -416,6 +499,10 @@ a:hover {
   .entry-date {
     font-size: 0.7rem;
     letter-spacing: 0.14em;
+  }
+
+  .paths-nav {
+    gap: 0.8rem;
   }
 
   .hero {
