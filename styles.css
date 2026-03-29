@@ -98,6 +98,17 @@ li {
   color: var(--muted);
 }
 
+/*
+.paths-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.15rem 0 1.35rem;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+*/
 .paths-strip {
   display: flex;
   align-items: center;
@@ -251,6 +262,12 @@ li {
   font-weight: 600;
 }
 
+/*
+.section {
+  padding: 1.75rem 0 2rem;
+  border-top: 1px solid var(--border-soft);
+}
+*/
 .section {
   padding: 1.75rem 0 2rem;
 }

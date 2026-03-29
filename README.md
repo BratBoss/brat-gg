@@ -11,7 +11,7 @@ Journal entries live in:
 After editing the journal data, rebuild the rendered HTML with:
 
 ```bash
-npm run build
+npm run build:journal
 ```
 
 Then commit and push the updated files.
