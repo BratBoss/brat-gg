@@ -165,6 +165,7 @@ li {
 .hero {
   position: relative;
   padding: 0 0 3.75rem;
+  margin-top: 0;
   margin-bottom: 1rem;
 }
 
@@ -343,7 +344,7 @@ a:hover {
 }
 
 .journal-page-head {
-  padding-top: 0.6rem;
+  padding-top: 0;
   padding-bottom: 1.2rem;
   border-top: 0;
 }
@@ -531,7 +532,7 @@ a:hover {
   }
 
   .hero {
-    padding: 0.25rem 0 2.4rem;
+    padding: 0 0 2.4rem;
   }
 
   .hero::after {
