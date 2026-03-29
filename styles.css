@@ -339,6 +339,13 @@ a:hover {
   text-align: center;
 }
 
+.links-note {
+  margin-top: 1.35rem;
+  text-align: center;
+  font-size: 0.94rem;
+  color: var(--soft);
+}
+
 .timeline-latest .entry {
   padding-bottom: 0;
 }
