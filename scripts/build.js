@@ -153,7 +153,7 @@ const linksMain = `      <section class="section journal-page-head">
         <div class="section-head">
           <div>
             <p class="section-label">Links</p>
-            <h1>little places worth following</h1>
+            <h1>places worth following</h1>
           </div>
         </div>
       </section>
