@@ -24,7 +24,7 @@ The goal is to keep it simple:
 - `scripts/build.js` — generates the site pages
 - `scripts/templates/layout.js` — shared page shell, metadata, footer, and Paths bar
 - `styles.css` — shared site styling
-- `vercel.json` — deployment config and the current source for the local security-header test policy
+- `vercel.json` — the current deployment implementation for security headers and the local dev header source
 
 ### Generated output
 
@@ -113,7 +113,7 @@ For this repo, local work is the default. Agents should not commit, push, or mer
 - The site title/metadata title should stay `brat.gg`
 - Security headers should be enforced at the HTTP layer by the host serving the site
 - The canonical security-header policy lives in `docs/security-headers.md`
-- `vercel.json` is only an example deployment config, not the source of truth for the site's security model
+- `vercel.json` is the current deployment implementation for those headers and the local `npm run dev` header source, but `docs/security-headers.md` remains the policy source of truth
 
 ## Notes for agents
 
