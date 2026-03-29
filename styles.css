@@ -105,7 +105,6 @@ li {
   gap: 1rem;
   padding: 0.15rem 0 1.35rem;
   margin-bottom: 1.75rem;
-  border-bottom: 1px solid var(--border-soft);
 }
 
 .paths-strip .section-label {
@@ -162,6 +161,9 @@ li {
   border-color: rgba(230, 226, 214, 0.3);
 }
 
+.gallery-page .section {
+  border-top: 0;
+}
 
 .hero {
   position: relative;
@@ -251,7 +253,6 @@ li {
 
 .section {
   padding: 1.75rem 0 2rem;
-  border-top: 1px solid var(--border-soft);
 }
 
 .intro-grid {
