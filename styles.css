@@ -162,10 +162,6 @@ li {
   border-color: rgba(230, 226, 214, 0.3);
 }
 
-.gallery-page .section {
-  border-top: 0;
-}
-
 .hero {
   position: relative;
   padding: 1rem 0 3.75rem;
