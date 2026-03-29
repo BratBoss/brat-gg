@@ -321,6 +321,7 @@ a:hover {
 .journal-page-head {
   padding-top: 0.6rem;
   padding-bottom: 1.2rem;
+  border-top: 0;
 }
 
 .journal-page-head h1 {
