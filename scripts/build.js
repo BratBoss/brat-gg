@@ -160,6 +160,7 @@ const linksMain = `      <section class="section journal-page-head">
 
       <section class="section links-section">
         <p>Discord → <a href="https://discord.gg/yr5xhkDPvc" target="_blank" rel="noopener noreferrer">https://discord.gg/yr5xhkDPvc</a></p>
+        <p>GitHub → <a href="https://github.com/Aria-Vale" target="_blank" rel="noopener noreferrer">https://github.com/Aria-Vale</a></p>
       </section>`;
 
 const errorMain = ({ eyebrow, heading, lede, body, bestMove }) => `      <section class="hero hero-grid">
