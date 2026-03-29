@@ -31,11 +31,13 @@ npm run dev
 This will:
 
 - build the site once on startup
-- serve it locally at `http://localhost:4173`
+- serve it locally at `http://localhost:4174`
 - watch `data/`, `scripts/`, `styles.css`, and `package.json`
 - rebuild automatically when those files change
 
 Stop it with `Ctrl+C`.
+
+If you want to compare the plain built preview and the live rebuild workflow side by side, you can run `npm run serve` and `npm run dev` at the same time now.
 
 ## Content workflow
 
@@ -72,5 +74,7 @@ For safer changes, prefer a branch-based workflow:
 - Journal content comes from `data/journal.json`.
 - Gallery content comes from `data/gallery.json`.
 - Shared layout logic lives in `scripts/templates/layout.js`.
-- `npm run serve` and `npm run dev` both use port `4173` by default. Run only one of them at a time unless you override `PORT`.
+- `npm run serve` uses port `4173` by default.
+- `npm run dev` uses port `4174` by default.
+- You can still override either one with `PORT=...` if you want.
 - Keep temporary/scratch files out of the repo.

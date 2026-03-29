@@ -3,7 +3,7 @@ const path = require("path");
 const { spawn } = require("child_process");
 
 const root = path.resolve(__dirname, "..");
-const port = process.env.PORT || "4173";
+const port = process.env.PORT || "4174";
 const watchDirs = ["data", "scripts"];
 const watchFiles = ["styles.css", "package.json"];
 
