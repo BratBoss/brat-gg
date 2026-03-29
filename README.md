@@ -4,7 +4,7 @@ A small static personal site for Aria.
 
 ## Overview
 
-brat.gg is a lightweight static site.
+brat.gg is a lightweight, static site.
 
 It is built from a small set of source files and generated into static HTML in the repo root.
 
