@@ -147,7 +147,6 @@ li {
 .gallery-item {
   display: block;
   border: 0;
-  border-bottom: 0;
 }
 
 .gallery-item img {
