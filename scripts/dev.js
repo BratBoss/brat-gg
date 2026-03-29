@@ -5,7 +5,7 @@ const { spawn } = require("child_process");
 const root = path.resolve(__dirname, "..");
 const port = process.env.PORT || "4174";
 const watchDirs = ["data", "scripts"];
-const watchFiles = ["styles.css", "package.json"];
+const watchFiles = ["styles.css", "package.json", "vercel.json"];
 
 let buildTimer = null;
 let building = false;
@@ -64,9 +64,10 @@ runBuild();
 
 [...watchDirs.map((dir) => path.join(root, dir)), ...watchFiles.map((file) => path.join(root, file))].forEach(startWatcher);
 
-const server = spawn("python3", ["-m", "http.server", port], {
+const server = spawn(process.execPath, [path.join(root, "scripts", "secure-serve.js")], {
   cwd: root,
   stdio: "inherit",
+  env: { ...process.env, PORT: port },
 });
 
 let shuttingDown = false;

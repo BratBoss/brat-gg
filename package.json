@@ -3,7 +3,6 @@
   "private": true,
   "scripts": {
     "build": "node scripts/build.js",
-    "serve": "python3 -m http.server ${PORT:-4173}",
     "dev": "node scripts/dev.js"
   }
 }

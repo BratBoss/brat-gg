@@ -24,6 +24,7 @@ The goal is to keep it simple:
 - `scripts/build.js` — generates the site pages
 - `scripts/templates/layout.js` — shared page shell, metadata, footer, and Paths bar
 - `styles.css` — shared site styling
+- `vercel.json` — deployment config and the current source for the local security-header test policy
 
 ### Generated output
 
@@ -50,32 +51,23 @@ npm run build
 
 Generates the static HTML files in the repo root.
 
-### Preview the built site
-
-```bash
-npm run serve
-```
-
-Serves the current built output locally at:
-
-- `http://localhost:4173`
-
 ### Dev mode
 
 ```bash
 npm run dev
 ```
 
-This will:
+This is the one local dev/test environment for brat.gg.
+
+It will:
 
 - build the site once on startup
 - serve it locally at `http://localhost:4174`
-- watch `data/`, `scripts/`, `styles.css`, and `package.json`
+- apply the security headers currently defined in `vercel.json`
+- watch `data/`, `scripts/`, `styles.css`, `package.json`, and `vercel.json`
 - rebuild automatically when those files change
 
 Stop it with `Ctrl+C`.
-
-If you want to compare the plain built preview and the live rebuild workflow side by side, you can run `npm run serve` and `npm run dev` at the same time.
 
 ## Editing workflow
 
@@ -84,8 +76,7 @@ Typical local workflow:
 1. run `npm run dev`
 2. make your changes
 3. refresh the browser and check the result on `http://localhost:4174`
-4. if needed, compare against `http://localhost:4173`
-5. commit when you're happy
+4. commit when you're happy
 
 ### Content editing
 
@@ -97,6 +88,7 @@ Typical local workflow:
 - Change shared page shell or Paths behavior in `scripts/templates/layout.js`
 - Change page generation in `scripts/build.js`
 - Change site-wide styling in `styles.css`
+- Change security-header behavior in `vercel.json`
 
 ## Suggested Git + deploy workflow
 
@@ -104,11 +96,16 @@ For safer changes, prefer a branch-based workflow:
 
 1. create a branch for the change
 2. work locally with `npm run dev`
-3. push the branch to GitHub
-4. check the Vercel preview deployment for that branch
-5. merge to `main` when everything looks right
+3. review the result locally
+4. push the branch to GitHub only when explicitly requested
+5. check the Vercel preview deployment for that branch if a push happens
+6. merge to `main` only when explicitly requested and everything looks right
 
 Production should remain on `main`.
+
+## Push / deploy guardrail
+
+For this repo, local work is the default. Agents should not commit, push, or merge changes unless explicitly asked to do that step.
 
 ## Deployment notes
 
@@ -121,7 +118,7 @@ Production should remain on `main`.
 ## Notes for agents
 
 - Prefer editing source files over generated output
-- After changing source data, templates, or styles, run `npm run build`
+- After changing source data, templates, styles, or security-header config, run `npm run build` or verify through `npm run dev`
 - If you change shared layout or metadata logic, verify all generated pages
 - Keep the site lightweight and static
 - Do not introduce heavy dependencies or frameworks unless explicitly requested
@@ -131,5 +128,4 @@ Production should remain on `main`.
 ## Quick command summary
 
 - `npm run build` — generate the static site
-- `npm run serve` — serve built output at `http://localhost:4173`
-- `npm run dev` — build, watch, and serve at `http://localhost:4174`
+- `npm run dev` — build, watch, serve locally, and apply the local security-header policy at `http://localhost:4174`
