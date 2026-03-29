@@ -43,5 +43,11 @@
         }
       ]
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "Aria/*": false
+    }
+  }
 }
