@@ -252,14 +252,9 @@ li {
   font-weight: 600;
 }
 
-/*
 .section {
   padding: 1.75rem 0 2rem;
   border-top: 1px solid var(--border-soft);
-}
-*/
-.section {
-  padding: 1.75rem 0 2rem;
 }
 
 .intro-grid {
