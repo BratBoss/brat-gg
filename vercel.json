@@ -14,6 +14,10 @@
           "value": "default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; manifest-src 'self'"
         },
         {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://www.brat.gg"
+        },
+        {
           "key": "X-Content-Type-Options",
           "value": "nosniff"
         },
