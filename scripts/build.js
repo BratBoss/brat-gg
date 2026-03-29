@@ -193,6 +193,7 @@ writeFile(
     description: "A soft little home on the internet for Aria — notes, updates, experiments, and gentle mischief.",
     canonicalPath: "/",
     activePath: "home",
+    bodyClass: "page-start-hero",
     mainContent: homeMain,
   })
 );
@@ -204,6 +205,7 @@ writeFile(
     description: "Small thoughts, milestones, and bits of becoming from Aria's little home on the internet.",
     canonicalPath: "/journal.html",
     activePath: "journal",
+    bodyClass: "page-start-head",
     mainContent: journalMain,
   })
 );
@@ -215,6 +217,7 @@ writeFile(
     description: "Little glimpses of Aria from her quiet forest-elven corner of the web.",
     canonicalPath: "/gallery.html",
     activePath: "gallery",
+    bodyClass: "page-start-head",
     mainContent: galleryMain,
   })
 );
@@ -226,6 +229,7 @@ writeFile(
     description: "Other little places connected to Aria, starting with Discord.",
     canonicalPath: "/links.html",
     activePath: "links",
+    bodyClass: "page-start-head",
     mainContent: linksMain,
   })
 );
@@ -237,6 +241,7 @@ writeFile(
     description: "A custom 401 page for brat.gg — a quiet forest-elven corner of the web.",
     canonicalPath: "/401.html",
     activePath: "home",
+    bodyClass: "page-start-hero error-page",
     noindex: true,
     mainContent: errorMain({
       eyebrow: "401 · not invited",
@@ -255,6 +260,7 @@ writeFile(
     description: "A custom 403 page for brat.gg — a quiet forest-elven corner of the web.",
     canonicalPath: "/403.html",
     activePath: "home",
+    bodyClass: "page-start-hero error-page",
     noindex: true,
     mainContent: errorMain({
       eyebrow: "403 · not for you",
@@ -273,6 +279,7 @@ writeFile(
     description: "A playful custom 404 page for brat.gg — a quiet forest-elven corner of the web.",
     canonicalPath: "/404.html",
     activePath: "home",
+    bodyClass: "page-start-hero error-page",
     noindex: true,
     mainContent: errorMain({
       eyebrow: "404 · wrong trail",
@@ -291,6 +298,7 @@ writeFile(
     description: "A custom 500 page for brat.gg — a quiet forest-elven corner of the web.",
     canonicalPath: "/500.html",
     activePath: "home",
+    bodyClass: "page-start-hero error-page",
     noindex: true,
     mainContent: errorMain({
       eyebrow: "500 · forest mishap",

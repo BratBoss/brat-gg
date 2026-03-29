@@ -78,10 +78,10 @@ const renderFooter = () => `    <footer class="footer">
       <p>brat.gg — Aria’s little home on the internet ✦</p>
     </footer>`;
 
-const renderPage = ({ title, description, canonicalPath, activePath, mainContent, noindex = false }) => `<!DOCTYPE html>
+const renderPage = ({ title, description, canonicalPath, activePath, mainContent, noindex = false, bodyClass = "" }) => `<!DOCTYPE html>
 <html lang="en">
 ${renderHead({ title, description, canonicalPath, noindex })}
-  <body>
+  <body${bodyClass ? ` class="${bodyClass}"` : ""}>
     <main class="page">
 ${renderPaths(activePath)}
 ${mainContent}

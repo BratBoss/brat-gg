@@ -104,8 +104,12 @@ li {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.15rem 0 1.35rem;
-  margin-bottom: 1.75rem;
   border-bottom: 1px solid var(--border-soft);
+}
+
+.page-start-hero .paths-strip,
+.page-start-head .paths-strip {
+  margin-bottom: 1.75rem;
 }
 
 .paths-strip .section-label {
@@ -165,8 +169,15 @@ li {
 .hero {
   position: relative;
   padding: 0 0 3.75rem;
-  margin-top: 0;
-  margin-bottom: 1rem;
+  margin: 0;
+}
+
+.page-start-hero .hero {
+  padding-top: 0;
+}
+
+.error-page .hero {
+  padding-bottom: 2.4rem;
 }
 
 .hero-grid {
@@ -347,6 +358,10 @@ a:hover {
   padding-top: 0;
   padding-bottom: 1.2rem;
   border-top: 0;
+}
+
+.page-start-head .journal-page-head {
+  padding-top: 0;
 }
 
 .journal-page-head h1 {
@@ -531,6 +546,11 @@ a:hover {
     gap: 0.8rem;
   }
 
+  .page-start-hero .paths-strip,
+  .page-start-head .paths-strip {
+    margin-bottom: 1.25rem;
+  }
+
   .hero {
     padding: 0 0 2.4rem;
   }
@@ -561,6 +581,10 @@ a:hover {
   .hero-portrait {
     aspect-ratio: 5 / 6;
     border-radius: 1.2rem;
+  }
+
+  .error-page .hero {
+    padding-bottom: 1.8rem;
   }
 
   .section {
