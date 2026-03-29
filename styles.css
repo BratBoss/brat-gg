@@ -137,6 +137,11 @@ li {
   border-bottom-color: rgba(230, 226, 214, 0.45);
 }
 
+.paths-nav a[aria-current="page"] {
+  color: var(--accent-bright);
+  border-bottom-color: rgba(230, 226, 214, 0.72);
+}
+
 .path-soon {
   color: rgba(174, 183, 171, 0.72);
   cursor: default;
