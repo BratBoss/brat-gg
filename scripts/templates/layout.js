@@ -16,8 +16,7 @@ const renderPaths = (activePath) => {
     { key: "links", label: "Links", href: "/links.html" },
   ];
 
-  return `      <section class="paths-strip" aria-label="Paths">
-        <p class="section-label">Paths</p>
+  return `      <section class="paths-strip" aria-label="Primary">
         <nav class="paths-nav">
 ${items
   .map((item) => {

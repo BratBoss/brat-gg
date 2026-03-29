@@ -343,6 +343,7 @@ a:hover {
   margin-top: 1.35rem;
   text-align: center;
   font-size: 0.94rem;
+  font-weight: 400;
   color: var(--soft);
 }
 
