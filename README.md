@@ -47,12 +47,24 @@ Gallery entries live in:
 
 - `data/gallery.json`
 
-Typical workflow:
+Typical local workflow:
 
 1. run `npm run dev`
 2. make your changes
 3. refresh the browser and check the result
-4. commit and push when you're happy
+4. commit when you're happy
+
+## Suggested Git + deploy workflow
+
+For safer changes, prefer a branch-based workflow:
+
+1. create a branch for the change
+2. work locally with `npm run dev`
+3. push the branch to GitHub
+4. check the Vercel preview deployment for that branch
+5. merge to `main` when everything looks right
+
+`main` should remain the production branch.
 
 ## Notes
 
@@ -60,4 +72,5 @@ Typical workflow:
 - Journal content comes from `data/journal.json`.
 - Gallery content comes from `data/gallery.json`.
 - Shared layout logic lives in `scripts/templates/layout.js`.
+- `npm run serve` and `npm run dev` both use port `4173` by default. Run only one of them at a time unless you override `PORT`.
 - Keep temporary/scratch files out of the repo.
