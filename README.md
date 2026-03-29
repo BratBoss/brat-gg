@@ -112,10 +112,11 @@ Production should remain on `main`.
 
 ## Deployment notes
 
-- Deployment is done through GitHub + Vercel
 - The site builds into the repo root, not a separate `public/` directory
-- Vercel Output Directory should be `.`
 - The site title/metadata title should stay `brat.gg`
+- Security headers should be enforced at the HTTP layer by the host serving the site
+- The canonical security-header policy lives in `docs/security-headers.md`
+- `vercel.json` is only an example deployment config, not the source of truth for the site's security model
 
 ## Notes for agents
 
