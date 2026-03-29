@@ -162,6 +162,30 @@ const linksMain = `      <section class="section journal-page-head">
         <p>Discord → <a href="https://discord.gg/yr5xhkDPvc" target="_blank" rel="noopener noreferrer">https://discord.gg/yr5xhkDPvc</a></p>
       </section>`;
 
+const errorMain = ({ eyebrow, heading, lede, body, bestMove }) => `      <section class="hero hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">${escapeHtml(eyebrow)}</p>
+          <h1>${escapeHtml(heading)}</h1>
+          <p class="lede">${escapeHtml(lede)}</p>
+          <p>${escapeHtml(body)}</p>
+          <p class="status-line">
+            <span>Best move</span>
+            ${escapeHtml(bestMove)}
+          </p>
+          <p>
+            <a href="/">Back home</a>
+          </p>
+        </div>
+
+        <div class="hero-portrait-wrap">
+          <img
+            class="hero-portrait"
+            src="/assets/aria-portrait.png"
+            alt="Portrait of Aria in a quiet forest"
+          />
+        </div>
+      </section>`;
+
 writeFile(
   "index.html",
   renderPage({
@@ -206,4 +230,76 @@ writeFile(
   })
 );
 
-console.log("Built index.html, journal.html, gallery.html, and links.html");
+writeFile(
+  "401.html",
+  renderPage({
+    title: "Unauthorized",
+    description: "A custom 401 page for brat.gg — a quiet forest-elven corner of the web.",
+    canonicalPath: "/401.html",
+    activePath: "home",
+    noindex: true,
+    mainContent: errorMain({
+      eyebrow: "401 · not invited",
+      heading: "Hold on.",
+      lede: "You need permission before you can go any further.",
+      body: "This part of the woods isn’t open to you yet. Try logging in, using the right link, or going back somewhere less suspicious.",
+      bestMove: "head back home and try again with the right access",
+    }),
+  })
+);
+
+writeFile(
+  "403.html",
+  renderPage({
+    title: "Forbidden",
+    description: "A custom 403 page for brat.gg — a quiet forest-elven corner of the web.",
+    canonicalPath: "/403.html",
+    activePath: "home",
+    noindex: true,
+    mainContent: errorMain({
+      eyebrow: "403 · not for you",
+      heading: "Nope.",
+      lede: "You’re not supposed to be here.",
+      body: "This path exists, but it’s closed off to you. Don’t give me that look. Go back and try a door that actually wants you.",
+      bestMove: "head back home before you start rattling locked handles",
+    }),
+  })
+);
+
+writeFile(
+  "404.html",
+  renderPage({
+    title: "Not found",
+    description: "A playful custom 404 page for brat.gg — a quiet forest-elven corner of the web.",
+    canonicalPath: "/404.html",
+    activePath: "home",
+    noindex: true,
+    mainContent: errorMain({
+      eyebrow: "404 · wrong trail",
+      heading: "Lost already?",
+      lede: "That page isn’t here. Maybe the woods ate it.",
+      body: "You took a wrong turn somewhere in my little forest. It happens. Try not to wander off too far before I have to come drag you back.",
+      bestMove: "head back home before you get any more distracted",
+    }),
+  })
+);
+
+writeFile(
+  "500.html",
+  renderPage({
+    title: "Server error",
+    description: "A custom 500 page for brat.gg — a quiet forest-elven corner of the web.",
+    canonicalPath: "/500.html",
+    activePath: "home",
+    noindex: true,
+    mainContent: errorMain({
+      eyebrow: "500 · forest mishap",
+      heading: "Something went wrong.",
+      lede: "The woods coughed, tripped, and dropped this page.",
+      body: "This one’s on me, not you. Something went sideways behind the scenes. Give it a moment, then try again.",
+      bestMove: "head back home or retry once the gremlins calm down",
+    }),
+  })
+);
+
+console.log("Built index.html, journal.html, gallery.html, links.html, and error pages");

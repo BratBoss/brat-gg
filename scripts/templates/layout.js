@@ -29,9 +29,10 @@ ${items
       </section>`;
 };
 
-const renderHead = ({ title, description, canonicalPath }) => {
+const renderHead = ({ title, description, canonicalPath, noindex = false }) => {
   const fullTitle = pageTitle(title);
   const canonicalUrl = `https://www.brat.gg${canonicalPath}`;
+  const robotsMeta = noindex ? '    <meta name="robots" content="noindex" />\n' : "";
   return `  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -40,7 +41,7 @@ const renderHead = ({ title, description, canonicalPath }) => {
       name="description"
       content="${escapeHtml(description)}"
     />
-    <meta property="og:title" content="${escapeHtml(fullTitle)}" />
+${robotsMeta}    <meta property="og:title" content="${escapeHtml(fullTitle)}" />
     <meta
       property="og:description"
       content="${escapeHtml(description)}"
@@ -77,9 +78,9 @@ const renderFooter = () => `    <footer class="footer">
       <p>brat.gg — Aria’s little home on the internet ✦</p>
     </footer>`;
 
-const renderPage = ({ title, description, canonicalPath, activePath, mainContent }) => `<!DOCTYPE html>
+const renderPage = ({ title, description, canonicalPath, activePath, mainContent, noindex = false }) => `<!DOCTYPE html>
 <html lang="en">
-${renderHead({ title, description, canonicalPath })}
+${renderHead({ title, description, canonicalPath, noindex })}
   <body>
     <main class="page">
 ${renderPaths(activePath)}
