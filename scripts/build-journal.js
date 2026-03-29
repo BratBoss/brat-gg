@@ -51,7 +51,7 @@ const renderedGallery = galleryItems.length
   ? galleryItems
       .map(
         (item) => `          <a class="gallery-item" href="${escapeHtml(item.src)}" target="_blank" rel="noopener noreferrer">
-            <img src="${escapeHtml(item.src)}" alt="${escapeHtml(item.alt)}" loading="lazy" />
+            <img src="${escapeHtml(item.src)}" alt="${escapeHtml(item.alt)}" />
           </a>`
       )
       .join("\n\n")
