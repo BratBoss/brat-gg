@@ -1,6 +1,6 @@
 // Template variables defined in system-prompt.md:
 //   {{USER_NAME}}        — the user's display name
-//   {{HISTORY_SUMMARY}}  — summary of prior conversations (not implemented in v1)
+//   {{HISTORY_SUMMARY}}  — cumulative summary of prior conversations
 //   {{CURRENT_DATE}}     — today's date, formatted for readability
 //
 // Edit system-prompt.md to change Aria's character/behavior.
@@ -107,14 +107,25 @@ She's not mean. The teasing is always affectionate.`;
 export function buildAriaSystemPrompt({
   userName,
   currentDate,
+  historySummary,
 }: {
   userName: string | null;
   currentDate: string;
+  historySummary: string | null;
 }): string {
   const displayedName = userName?.trim() || "someone who hasn't shared their name yet";
 
-  // {{HISTORY_SUMMARY}} is not implemented in v1 — remove the placeholder
-  // cleanly so the surrounding text still reads naturally.
+  if (historySummary?.trim()) {
+    // Inject the summary with a natural lead-in that fits the surrounding text.
+    const historyBlock = `You've spoken with them before. Here's what you remember:\n\n${historySummary.trim()}`;
+    return TEMPLATE
+      .replace("{{USER_NAME}}", displayedName)
+      .replace("{{CURRENT_DATE}}", currentDate)
+      .replace("{{HISTORY_SUMMARY}}", historyBlock);
+  }
+
+  // No prior history — remove the placeholder cleanly so the surrounding
+  // "If there's no prior history..." text still reads naturally.
   return TEMPLATE
     .replace("{{USER_NAME}}", displayedName)
     .replace("{{CURRENT_DATE}}", currentDate)
