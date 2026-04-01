@@ -1,6 +1,6 @@
 # brat.gg
 
-A small, personal website for AI companions. Each companion ("brat") has their own space: a profile page, journal, gallery, and one-on-one chat. brat.gg is a **bring-your-own-key (BYOK)** product — users supply their own OpenRouter API keys. The site never holds provider credentials.
+A small, personal website for AI companions. Each companion ("brat") has their own space: a profile page, journal, gallery, and one-on-one chat. brat.gg is a **bring-your-own-key (BYOK)** product — users supply their own OpenRouter API keys. The site does not use any shared or site-managed provider key; each request is made with the individual user's own key, stored encrypted at rest.
 
 V1 ships one companion: Aria.
 
@@ -73,7 +73,7 @@ Open `http://localhost:3000`.
 npm run build
 ```
 
-The build runs TypeScript type-checking. It will fail if `ENCRYPTION_SECRET` is absent at startup (by design — see BYOK section).
+The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `ENCRYPTION_SECRET` before the first request is served — this is distinct from the build step (see BYOK section).
 
 ---
 
@@ -82,11 +82,11 @@ The build runs TypeScript type-checking. It will fail if `ENCRYPTION_SECRET` is 
 | Variable | Required | Description |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon/public key |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (labelled **Publishable key** in the Supabase dashboard) |
 | `NEXT_PUBLIC_APP_URL` | Yes | Base URL, e.g. `http://localhost:3000` or `https://brat.gg`. Used as the auth redirect origin. |
 | `ENCRYPTION_SECRET` | Yes | 64 hex characters (32 bytes). Encrypts user API keys at rest. Generate: `openssl rand -hex 32`. **Server-only. Never expose.** |
 
-`ENCRYPTION_SECRET` has no fallback. A missing or malformed value causes the server to refuse to start (`src/instrumentation.ts` validates it before the first request).
+`ENCRYPTION_SECRET` has no fallback. A missing or malformed value causes the server to abort at runtime startup — `src/instrumentation.ts` validates it before the first request is served. The build itself does not fail on this; the failure happens when the server process initialises.
 
 ---
 
@@ -121,7 +121,7 @@ There are no passwords and no OAuth providers in V1.
 
 ## BYOK model and key security
 
-brat.gg never holds OpenRouter credentials. Every user provides their own key. This is a product constraint, not a cost-saving measure — do not add site-managed keys.
+brat.gg does not use any shared or site-managed OpenRouter key. Every user provides their own key, which is stored encrypted at rest and used only for that user's requests. This is a product constraint, not a cost-saving measure — do not add a site-managed fallback key.
 
 ### How keys are stored
 
@@ -269,7 +269,7 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_APP_URL` (production domain, e.g. `https://brat.gg`)
    - `ENCRYPTION_SECRET` (generate a fresh value for production)
-3. Deploy. The build will fail at startup validation if `ENCRYPTION_SECRET` is missing — this is the intended behavior.
+3. Deploy. If `ENCRYPTION_SECRET` is missing or malformed, the server will abort at runtime startup (not at build time) — this is the intended behavior.
 
 **`outputFileTracingIncludes`:** `next.config.ts` includes `src/content/aria/system-prompt.md` in the `/api/chat` serverless bundle. Without this, the file is absent from the Vercel lambda and the chat route throws at runtime. This key is at the top level of the Next.js config object (not under `experimental` — that location was removed in Next.js 16).
 
