@@ -2,30 +2,43 @@ import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
 const ALGORITHM = "aes-256-gcm";
 
-// 32 zero-bytes — used only in non-production when ENCRYPTION_SECRET is unset.
-// Keys encrypted with this fallback are readable but not secure.
-const DEV_FALLBACK_KEY = "0".repeat(64);
+// ---------------------------------------------------------------
+// BYOK security note
+//
+// brat.gg is a bring-your-own-key product. Users supply their own
+// OpenRouter API keys; no site-managed provider keys exist.
+// ENCRYPTION_SECRET protects those keys at rest in the database.
+//
+// There is no fallback key. If ENCRYPTION_SECRET is absent or
+// malformed the server refuses to run. This is intentional:
+// silent crypto degradation is worse than a loud startup failure.
+// ---------------------------------------------------------------
+
+/**
+ * Thrown when the server's ENCRYPTION_SECRET env var is absent or
+ * malformed. This is a deployment/configuration error — not a user
+ * error. API routes should respond with 500 and a generic message.
+ */
+export class ConfigError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ConfigError";
+  }
+}
 
 function getKey(): Buffer {
   const secret = process.env.ENCRYPTION_SECRET;
 
   if (!secret) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(
-        "\x1b[33m[brat.gg] ENCRYPTION_SECRET is not set. " +
-          "Using an insecure dev fallback key. " +
-          "Set this variable before deploying to production.\x1b[0m"
-      );
-      return Buffer.from(DEV_FALLBACK_KEY, "hex");
-    }
-    throw new Error(
-      "ENCRYPTION_SECRET is not set. This is required in production. " +
+    throw new ConfigError(
+      "ENCRYPTION_SECRET is not set. " +
+        "This is required for BYOK key storage. " +
         "Generate one with: openssl rand -hex 32"
     );
   }
 
   if (secret.length !== 64) {
-    throw new Error(
+    throw new ConfigError(
       "ENCRYPTION_SECRET must be exactly 64 hex characters (32 bytes). " +
         "Generate one with: openssl rand -hex 32"
     );
@@ -35,8 +48,18 @@ function getKey(): Buffer {
 }
 
 /**
+ * Call this at server startup (e.g. from instrumentation.ts) to
+ * catch a missing or malformed ENCRYPTION_SECRET before any request
+ * is served, rather than on the first user interaction that needs it.
+ */
+export function assertEncryptionConfigured(): void {
+  getKey(); // throws ConfigError if misconfigured
+}
+
+/**
  * Encrypts a plaintext string using AES-256-GCM.
  * Returns a colon-separated string: iv:authTag:ciphertext (all hex-encoded).
+ * Throws ConfigError if ENCRYPTION_SECRET is absent or malformed.
  */
 export function encryptSecret(plaintext: string): string {
   const key = getKey();
@@ -52,13 +75,14 @@ export function encryptSecret(plaintext: string): string {
 
 /**
  * Decrypts a value produced by encryptSecret.
- * Throws if the input is malformed or the key/tag is wrong.
+ * Throws ConfigError if ENCRYPTION_SECRET is absent or malformed.
+ * Throws a plain Error if the stored value is malformed or the auth tag fails.
  */
 export function decryptSecret(stored: string): string {
-  const key = getKey();
+  const key = getKey(); // ConfigError propagates as-is
   const parts = stored.split(":");
   if (parts.length !== 3) {
-    throw new Error("Encrypted value has unexpected format");
+    throw new Error("Stored value has unexpected format");
   }
   const [ivHex, tagHex, ctHex] = parts;
   const iv = Buffer.from(ivHex, "hex");

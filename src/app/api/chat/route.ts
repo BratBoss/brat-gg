@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { decryptSecret } from "@/lib/crypto";
+import { decryptSecret, ConfigError } from "@/lib/crypto";
 import { NextResponse } from "next/server";
 
 // Aria's system prompt
@@ -51,6 +51,8 @@ export async function POST(request: Request) {
     .eq("id", user.id)
     .single();
 
+  // BYOK requirement: every user must supply their own key.
+  // No key stored = normal state for a new user, not a server error.
   if (!profile?.openrouter_api_key) {
     return NextResponse.json(
       { error: "No OpenRouter API key configured. Please add one in Settings." },
@@ -58,13 +60,22 @@ export async function POST(request: Request) {
     );
   }
 
-  // Decrypt the API key — it is stored AES-256-GCM encrypted.
+  // Decrypt the user's key. Two distinct failure modes:
+  //   ConfigError  → ENCRYPTION_SECRET is absent/wrong (deployment error, 500)
+  //   plain Error  → stored value is malformed (user can re-enter key, 422)
   let decryptedApiKey: string;
   try {
     decryptedApiKey = decryptSecret(profile.openrouter_api_key);
-  } catch {
+  } catch (err) {
+    if (err instanceof ConfigError) {
+      console.error("[brat.gg] ENCRYPTION_SECRET misconfiguration:", err.message);
+      return NextResponse.json(
+        { error: "Server configuration error. Please contact the administrator." },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
-      { error: "Could not read API key. Please re-enter it in Settings." },
+      { error: "Could not read your API key. Please re-enter it in Settings." },
       { status: 422 }
     );
   }

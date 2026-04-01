@@ -204,7 +204,9 @@ export default function ChatClient({
         {allDisplayMessages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <p className="text-[#4a5e4c] text-sm">
-              Say something to begin.
+              {profile.hasApiKey
+                ? "Say something to begin."
+                : "Add your OpenRouter API key in Settings to start chatting."}
             </p>
           </div>
         )}

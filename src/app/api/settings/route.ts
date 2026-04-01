@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { encryptSecret } from "@/lib/crypto";
+import { encryptSecret, ConfigError } from "@/lib/crypto";
 import { NextResponse } from "next/server";
 
 const ALLOWED_MODELS = ["x-ai/grok-4.1-fast", "deepseek/deepseek-v3.2"];
@@ -63,8 +63,14 @@ export async function POST(request: Request) {
       try {
         update.openrouter_api_key = encryptSecret(openrouterApiKey);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Encryption failed";
-        return NextResponse.json({ error: message }, { status: 500 });
+        if (err instanceof ConfigError) {
+          console.error("[brat.gg] ENCRYPTION_SECRET misconfiguration:", err.message);
+          return NextResponse.json(
+            { error: "Server configuration error. Please contact the administrator." },
+            { status: 500 }
+          );
+        }
+        return NextResponse.json({ error: "Failed to encrypt API key." }, { status: 500 });
       }
     }
   }
