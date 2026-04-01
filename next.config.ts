@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Include the system prompt file in the /api/chat serverless bundle.
+  // Without this, the file is not present in the Vercel lambda at runtime.
+  outputFileTracingIncludes: {
+    "/api/chat": ["./src/content/aria/system-prompt.md"],
+  },
   images: {
     // Allow Supabase storage URLs for user avatars
     remotePatterns: [
@@ -10,7 +15,6 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/public/**",
       },
     ],
-    // unoptimized: true is set per-image for local/public assets above
   },
 };
 
