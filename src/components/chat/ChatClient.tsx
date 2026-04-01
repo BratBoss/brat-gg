@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import Image from "next/image";
+import { createClient } from "@/lib/supabase/client";
 
 type Message = {
   id: string;
@@ -126,15 +127,9 @@ export default function ChatClient({
 
   async function handleNewChat() {
     startTransition(async () => {
-      // Summarize the conversation and delete the session server-side.
-      // Best-effort: even if this fails the reload still happens and a
-      // fresh session will be created on the next page load.
-      await fetch("/api/chat/summarize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      }).catch(() => {});
-
+      const supabase = createClient();
+      // Delete the session — messages cascade
+      await supabase.from("chat_sessions").delete().eq("id", sessionId);
       window.location.reload();
     });
   }

@@ -36,10 +36,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }
 
-  // Get user's profile — key, model, display name, and history for the system prompt
+  // Get user's profile — key, model, and display name for the system prompt
   const { data: profile } = await supabase
     .from("profiles")
-    .select("openrouter_api_key, openrouter_model, display_name, history_summary")
+    .select("openrouter_api_key, openrouter_model, display_name")
     .eq("id", user.id)
     .single();
 
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       month: "long",
       day: "numeric",
     }),
-    historySummary: profile.history_summary ?? null,
+    // historySummary not wired in v1 — memory design deferred
   });
 
   // Persist user message

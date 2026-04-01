@@ -1,6 +1,6 @@
 // Template variables defined in system-prompt.md:
 //   {{USER_NAME}}        — the user's display name
-//   {{HISTORY_SUMMARY}}  — cumulative summary of prior conversations
+//   {{HISTORY_SUMMARY}}  — reserved for future memory implementation
 //   {{CURRENT_DATE}}     — today's date, formatted for readability
 //
 // Edit system-prompt.md to change Aria's character/behavior.
@@ -107,11 +107,11 @@ She's not mean. The teasing is always affectionate.`;
 export function buildAriaSystemPrompt({
   userName,
   currentDate,
-  historySummary,
+  historySummary = null,
 }: {
   userName: string | null;
   currentDate: string;
-  historySummary: string | null;
+  historySummary?: string | null;
 }): string {
   const displayedName = userName?.trim() || "someone who hasn't shared their name yet";
 
