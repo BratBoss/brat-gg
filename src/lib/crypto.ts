@@ -2,13 +2,35 @@ import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
 const ALGORITHM = "aes-256-gcm";
 
+// 32 zero-bytes — used only in non-production when ENCRYPTION_SECRET is unset.
+// Keys encrypted with this fallback are readable but not secure.
+const DEV_FALLBACK_KEY = "0".repeat(64);
+
 function getKey(): Buffer {
   const secret = process.env.ENCRYPTION_SECRET;
-  if (!secret || secret.length !== 64) {
+
+  if (!secret) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        "\x1b[33m[brat.gg] ENCRYPTION_SECRET is not set. " +
+          "Using an insecure dev fallback key. " +
+          "Set this variable before deploying to production.\x1b[0m"
+      );
+      return Buffer.from(DEV_FALLBACK_KEY, "hex");
+    }
     throw new Error(
-      "ENCRYPTION_SECRET must be a 64-character hex string. Generate one with: openssl rand -hex 32"
+      "ENCRYPTION_SECRET is not set. This is required in production. " +
+        "Generate one with: openssl rand -hex 32"
     );
   }
+
+  if (secret.length !== 64) {
+    throw new Error(
+      "ENCRYPTION_SECRET must be exactly 64 hex characters (32 bytes). " +
+        "Generate one with: openssl rand -hex 32"
+    );
+  }
+
   return Buffer.from(secret, "hex");
 }
 

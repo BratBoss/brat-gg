@@ -16,11 +16,20 @@ export default async function ChatPage() {
     redirect("/login?next=/brats/aria/chat");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("openrouter_api_key, openrouter_model, display_name, avatar_url")
-    .eq("id", user.id)
-    .single();
+  // Run in parallel: profile data (no key blob) + key existence check.
+  // The key check uses head:true so PostgREST returns only a count — no body.
+  const [{ data: profile }, { count: keyCount }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("openrouter_model, display_name, avatar_url")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("id", user.id)
+      .not("openrouter_api_key", "is", null),
+  ]);
 
   // Generate signed URL for the user's avatar — bucket is private.
   let avatarDisplayUrl: string | null = null;
@@ -46,7 +55,7 @@ export default async function ChatPage() {
       profile={{
         displayName: profile?.display_name ?? null,
         avatarUrl: avatarDisplayUrl,
-        hasApiKey: !!profile?.openrouter_api_key,
+        hasApiKey: (keyCount ?? 0) > 0,
         model: profile?.openrouter_model ?? "x-ai/grok-4.1-fast",
       }}
     />
