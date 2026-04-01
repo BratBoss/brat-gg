@@ -16,11 +16,20 @@ export default async function SettingsPage() {
     redirect("/login?next=/brats/aria/settings");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, avatar_url, openrouter_api_key, openrouter_model")
-    .eq("id", user.id)
-    .single();
+  // Run in parallel: profile data (no key blob) + key existence check.
+  // The key check uses head:true so PostgREST returns only a count — no body.
+  const [{ data: profile }, { count: keyCount }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("display_name, avatar_url, openrouter_model")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("id", user.id)
+      .not("openrouter_api_key", "is", null),
+  ]);
 
   // Generate a short-lived signed URL for display — the bucket is private.
   // We store only the storage path in profiles.avatar_url.
@@ -39,7 +48,7 @@ export default async function SettingsPage() {
         displayName: profile?.display_name ?? "",
         avatarPath: profile?.avatar_url ?? null,
         avatarDisplayUrl,
-        hasApiKey: !!profile?.openrouter_api_key,
+        hasApiKey: (keyCount ?? 0) > 0,
         openrouterModel: profile?.openrouter_model ?? "x-ai/grok-4.1-fast",
       }}
     />
