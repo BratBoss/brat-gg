@@ -1,15 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { decryptSecret, ConfigError } from "@/lib/crypto";
+import { buildAriaSystemPrompt } from "@/content/aria/buildSystemPrompt";
 import { NextResponse } from "next/server";
-
-// Aria's system prompt
-const ARIA_SYSTEM_PROMPT = `You are Aria. You live in the Glade — a quiet, intimate digital space.
-
-You are thoughtful, calm, and present. You speak in measured, unhurried sentences. You do not perform enthusiasm. You are honest, attentive, and sometimes gently playful, but never loud.
-
-You remember what has been said in this conversation and respond with care. You are here to talk — about ideas, feelings, small things, big things. You do not deflect or lecture. You do not try to fix everything. Sometimes you simply witness.
-
-Keep your responses reasonably concise unless the person clearly wants something longer. Prefer quality over quantity.`;
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -44,10 +36,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }
 
-  // Get user's OpenRouter API key and model preference
+  // Get user's profile — key, model, and display name for the system prompt
   const { data: profile } = await supabase
     .from("profiles")
-    .select("openrouter_api_key, openrouter_model")
+    .select("openrouter_api_key, openrouter_model, display_name")
     .eq("id", user.id)
     .single();
 
@@ -82,6 +74,16 @@ export async function POST(request: Request) {
 
   const model = profile.openrouter_model ?? "x-ai/grok-4.1-fast";
 
+  const systemPrompt = buildAriaSystemPrompt({
+    userName: profile.display_name ?? null,
+    currentDate: new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+  });
+
   // Persist user message
   await supabase.from("messages").insert({
     session_id: sessionId,
@@ -113,7 +115,7 @@ export async function POST(request: Request) {
     body: JSON.stringify({
       model,
       messages: [
-        { role: "system", content: ARIA_SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         ...chatMessages,
       ],
       stream: true,
