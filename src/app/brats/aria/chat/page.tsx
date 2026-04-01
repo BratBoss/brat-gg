@@ -16,17 +16,23 @@ export default async function ChatPage() {
     redirect("/login?next=/brats/aria/chat");
   }
 
-  // Load profile to check if BYOK key is set
   const { data: profile } = await supabase
     .from("profiles")
     .select("openrouter_api_key, openrouter_model, display_name, avatar_url")
     .eq("id", user.id)
     .single();
 
-  // Load or create active chat session for this user + brat
-  let session = await getOrCreateSession(supabase, user.id, "aria");
+  // Generate signed URL for the user's avatar — bucket is private.
+  let avatarDisplayUrl: string | null = null;
+  if (profile?.avatar_url) {
+    const { data: signed } = await supabase.storage
+      .from("avatars")
+      .createSignedUrl(profile.avatar_url, 3600);
+    avatarDisplayUrl = signed?.signedUrl ?? null;
+  }
 
-  // Load messages for this session
+  const session = await getOrCreateSession(supabase, user.id, "aria");
+
   const { data: messages } = await supabase
     .from("messages")
     .select("id, role, content, created_at")
@@ -39,7 +45,7 @@ export default async function ChatPage() {
       initialMessages={messages ?? []}
       profile={{
         displayName: profile?.display_name ?? null,
-        avatarUrl: profile?.avatar_url ?? null,
+        avatarUrl: avatarDisplayUrl,
         hasApiKey: !!profile?.openrouter_api_key,
         model: profile?.openrouter_model ?? "x-ai/grok-4.1-fast",
       }}

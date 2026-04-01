@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { decryptSecret } from "@/lib/crypto";
 import { NextResponse } from "next/server";
 
 // Aria's system prompt
@@ -57,6 +58,17 @@ export async function POST(request: Request) {
     );
   }
 
+  // Decrypt the API key — it is stored AES-256-GCM encrypted.
+  let decryptedApiKey: string;
+  try {
+    decryptedApiKey = decryptSecret(profile.openrouter_api_key);
+  } catch {
+    return NextResponse.json(
+      { error: "Could not read API key. Please re-enter it in Settings." },
+      { status: 422 }
+    );
+  }
+
   const model = profile.openrouter_model ?? "x-ai/grok-4.1-fast";
 
   // Persist user message
@@ -82,7 +94,7 @@ export async function POST(request: Request) {
   const orResponse = await fetch(OPENROUTER_API_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${profile.openrouter_api_key}`,
+      Authorization: `Bearer ${decryptedApiKey}`,
       "Content-Type": "application/json",
       "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
       "X-Title": "brat.gg",

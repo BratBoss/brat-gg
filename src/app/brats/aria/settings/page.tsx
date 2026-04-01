@@ -22,13 +22,24 @@ export default async function SettingsPage() {
     .eq("id", user.id)
     .single();
 
+  // Generate a short-lived signed URL for display — the bucket is private.
+  // We store only the storage path in profiles.avatar_url.
+  let avatarDisplayUrl: string | null = null;
+  if (profile?.avatar_url) {
+    const { data: signed } = await supabase.storage
+      .from("avatars")
+      .createSignedUrl(profile.avatar_url, 3600);
+    avatarDisplayUrl = signed?.signedUrl ?? null;
+  }
+
   return (
     <SettingsClient
       userId={user.id}
       initialValues={{
         displayName: profile?.display_name ?? "",
-        avatarUrl: profile?.avatar_url ?? null,
-        openrouterApiKey: profile?.openrouter_api_key ?? "",
+        avatarPath: profile?.avatar_url ?? null,
+        avatarDisplayUrl,
+        hasApiKey: !!profile?.openrouter_api_key,
         openrouterModel: profile?.openrouter_model ?? "x-ai/grok-4.1-fast",
       }}
     />

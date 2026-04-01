@@ -6,8 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 
 type InitialValues = {
   displayName: string;
-  avatarUrl: string | null;
-  openrouterApiKey: string;
+  avatarPath: string | null;     // storage path — for saving
+  avatarDisplayUrl: string | null; // signed URL — for display only
+  hasApiKey: boolean;
   openrouterModel: string;
 };
 
@@ -24,8 +25,12 @@ export default function SettingsClient({
   initialValues: InitialValues;
 }) {
   const [displayName, setDisplayName] = useState(initialValues.displayName);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(initialValues.avatarUrl);
-  const [apiKey, setApiKey] = useState(initialValues.openrouterApiKey);
+  const [avatarPath, setAvatarPath] = useState<string | null>(initialValues.avatarPath);
+  const [avatarDisplayUrl, setAvatarDisplayUrl] = useState<string | null>(
+    initialValues.avatarDisplayUrl
+  );
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [hasApiKey, setHasApiKey] = useState(initialValues.hasApiKey);
   const [model, setModel] = useState(initialValues.openrouterModel);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -59,10 +64,13 @@ export default function SettingsClient({
       return;
     }
 
-    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    // Bust cache with timestamp
-    const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
-    setAvatarUrl(publicUrl);
+    // Generate a signed URL for immediate preview (private bucket).
+    const { data: signed } = await supabase.storage
+      .from("avatars")
+      .createSignedUrl(path, 3600);
+
+    setAvatarPath(path);
+    setAvatarDisplayUrl(signed?.signedUrl ?? null);
     setUploadingAvatar(false);
   }
 
@@ -72,24 +80,35 @@ export default function SettingsClient({
     setError(null);
     setSaved(false);
 
-    const supabase = createClient();
-    const { error: upsertError } = await supabase
-      .from("profiles")
-      .upsert({
-        id: userId,
-        display_name: displayName || null,
-        avatar_url: avatarUrl,
-        openrouter_api_key: apiKey || null,
-        openrouter_model: model,
-        updated_at: new Date().toISOString(),
-      });
+    const payload: Record<string, unknown> = {
+      displayName,
+      avatarPath,
+      openrouterModel: model,
+    };
+
+    // Only include the API key field if the user typed something.
+    // Leaving it empty when hasApiKey is true means "keep existing key".
+    if (apiKeyInput.trim() !== "") {
+      payload.openrouterApiKey = apiKeyInput;
+    }
+
+    const res = await fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
     setSaving(false);
 
-    if (upsertError) {
-      setError("Failed to save: " + upsertError.message);
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Failed to save settings.");
     } else {
       setSaved(true);
+      if (apiKeyInput.trim() !== "") {
+        setHasApiKey(true);
+        setApiKeyInput("");
+      }
       setTimeout(() => setSaved(false), 3000);
     }
   }
@@ -111,9 +130,9 @@ export default function SettingsClient({
           </label>
           <div className="flex items-center gap-5">
             <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[#2a3a2c] bg-[#161d17] shrink-0">
-              {avatarUrl ? (
+              {avatarDisplayUrl ? (
                 <Image
-                  src={avatarUrl}
+                  src={avatarDisplayUrl}
                   alt="Your avatar"
                   fill
                   className="object-cover"
@@ -176,17 +195,21 @@ export default function SettingsClient({
           >
             OpenRouter API key
           </label>
+          {hasApiKey && (
+            <p className="text-[#5e7d5a] text-xs">
+              A key is already saved. Enter a new one below to replace it.
+            </p>
+          )}
           <input
             id="apiKey"
             type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            placeholder="sk-or-…"
+            value={apiKeyInput}
+            onChange={(e) => setApiKeyInput(e.target.value)}
+            placeholder={hasApiKey ? "Leave blank to keep current key" : "sk-or-…"}
             className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors font-mono"
           />
           <p className="text-[#4a5e4c] text-xs">
-            Your key is stored privately and never shared. Used only for your
-            own chat sessions.
+            Encrypted before storage. Never visible after saving.
           </p>
         </section>
 

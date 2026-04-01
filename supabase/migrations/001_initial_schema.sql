@@ -6,9 +6,11 @@
 create table if not exists public.profiles (
   id            uuid primary key references auth.users(id) on delete cascade,
   display_name  text,
+  -- Storage path only (e.g. "userId/avatar.jpg").
+  -- Display via signed URLs — never a public URL.
   avatar_url    text,
-  -- Stored encrypted on the client/server but kept server-side only.
-  -- Never returned to other users.
+  -- AES-256-GCM encrypted by the Next.js server before writing.
+  -- The plaintext key is never stored or logged.
   openrouter_api_key  text,
   openrouter_model    text not null default 'x-ai/grok-4.1-fast',
   created_at    timestamptz not null default now(),
@@ -77,12 +79,49 @@ create policy "Users can manage their own messages"
 
 
 -- ============================================================
--- Storage: avatars bucket
--- Create via Supabase dashboard or supabase-cli:
---   insert into storage.buckets (id, name, public) values ('avatars', 'avatars', false);
+-- Storage: avatars bucket (private)
+--
+-- Run this SQL in the Supabase SQL editor to create the bucket
+-- and its RLS policies. The bucket must be private (public=false).
+-- Files are stored at path: {userId}/avatar.{ext}
+-- Access is via short-lived signed URLs generated server-side.
 -- ============================================================
 
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', false)
+on conflict (id) do nothing;
+
+-- Authenticated users may upload/overwrite only their own avatar
+create policy "Users can upload their own avatar"
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'avatars'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+create policy "Users can update their own avatar"
+  on storage.objects for update
+  to authenticated
+  using (
+    bucket_id = 'avatars'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- SELECT is required so the authenticated session can create signed URLs
+create policy "Users can read their own avatar"
+  on storage.objects for select
+  to authenticated
+  using (
+    bucket_id = 'avatars'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+
+-- ============================================================
 -- Auto-create profile on new user signup
+-- ============================================================
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
