@@ -26,10 +26,12 @@ export async function proxy(request: NextRequest) {
     "upgrade-insecure-requests",
   ].join("; ");
 
-  // x-nonce is forwarded to server components so they can pass it to <Script> components.
-  // Next.js also reads the CSP response header to auto-inject nonces into framework scripts.
+  // Next.js reads the CSP from the *incoming request* headers during SSR to extract
+  // the nonce and inject it into framework scripts and inline styles.
+  // x-nonce is also forwarded so server components can pass it to <Script> elements.
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", cspHeader);
 
   let supabaseResponse = NextResponse.next({
     request: { headers: requestHeaders },
