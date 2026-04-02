@@ -34,7 +34,7 @@ export default async function AriaLayout({
         </div>
 
         {/* Section nav */}
-        <nav className="flex items-center gap-1">
+        <nav className="flex items-center gap-1 flex-wrap">
           {navLinks.map((link) => (
             <Link
               key={link.href}

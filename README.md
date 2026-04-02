@@ -34,7 +34,7 @@ V1 ships one companion: Aria.
 | Auth + DB + Storage | Supabase | `@supabase/ssr` 0.10 |
 | AI provider | OpenRouter (via user key) | — |
 | Hosting | Vercel | — |
-| Language | TypeScript | 5.x |
+| Language | TypeScript | 6.0.2 |
 
 **Next.js 16 note:** This version has breaking changes. `middleware.ts` is now `proxy.ts` with a `proxy` export (not `middleware`). Several `experimental` config keys have moved to top-level. Read `node_modules/next/dist/docs/` before touching framework config.
 
@@ -290,27 +290,16 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 
 **Status:** Not assigned
 
-### BUG-003: Mobile chat view allows unintended horizontal scrolling
-
-**Symptom:** In the mobile chat interface, horizontal swiping causes the page to move off its intended viewport bounds. This reveals overflow space on one side and clips visible content on the other.
-
-**Expected behavior:** The mobile chat layout should be constrained to the viewport width with no horizontal scroll or lateral page movement.
-
-**Root cause (primary):** Unknown; investigation needed.
-
-**Files affected:** Unknown
-
-**Status:** Not assigned
-
 ---
 
-## Deferred / future work
+## Deferred / future work (Listed top to bottom most important to least)
 
 | Feature | Notes |
 |---|---|
-| Conversation summarization / memory | `{{HISTORY_SUMMARY}}` variable is wired in the prompt template but not populated. Intentionally deferred — no design for the summarization trigger or storage yet. |
-| Multiple chat sessions per user | Currently one session per user per brat (latest wins). No UI for session history. |
+| CSP and CORS | Priority security improvements. |
+| Encrypt Conversation History | Conversation history should be encrypted at rest. |
 | Long-context handling | No message trimming. Long conversations will hit model context limits. |
+| Multiple chat sessions per user | Currently one session per user per brat (latest wins). No UI for session history. |
 | Additional companions | Placeholder assets for Marcy and Sylvie exist in `public/images/brats/`. No routes, content, or sessions. |
 | OAuth login | Only magic link in V1. Supabase supports OAuth providers with minimal changes when needed. |
-| Dependency Update | TypeScript 6.0 and Supabase SSR v2.100.0 |
+| Conversation summarization / memory | `{{HISTORY_SUMMARY}}` variable is wired in the prompt template but not populated. Intentionally deferred — no design for the summarization trigger or storage yet. |
