@@ -28,6 +28,11 @@ export default function JournalPage() {
             <div className="text-[#8aaa8c] text-sm leading-relaxed whitespace-pre-line">
               {entry.body}
             </div>
+            {entry.status && (
+              <p className="mt-4 text-[#5e7d5a] text-xs tracking-wide">
+                {entry.status}
+              </p>
+            )}
           </article>
         ))}
       </div>
