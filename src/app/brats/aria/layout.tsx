@@ -75,17 +75,8 @@ async function AuthedUser() {
 
   if (!user) return null;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", user.id)
-    .single();
-
-  const label = profile?.display_name ?? user.email?.split("@")[0] ?? "you";
-
   return (
     <div className="flex items-center gap-3">
-      <span className="text-[#4a5e4c] text-xs">{label}</span>
       <SignOutButton />
     </div>
   );
