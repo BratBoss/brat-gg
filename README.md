@@ -20,7 +20,6 @@ V1 ships one companion: Aria.
 - Conversation summarization / long-term memory
 - Multiple active chat sessions per user
 - OAuth providers (GitHub, Google, etc.)
-- Public-facing profiles
 - Additional companions (Marcy, Sylvie — placeholder assets exist)
 
 ---
