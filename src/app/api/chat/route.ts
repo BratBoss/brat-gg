@@ -171,20 +171,43 @@ export async function POST(request: Request) {
           }
         }
       }
-    } finally {
-      // Persist assistant message BEFORE closing the stream.
-      // writer.close() signals EOF to Vercel, which may immediately freeze
-      // the function. Inserting first ensures the write completes while the
-      // serverless invocation is still live.
-      if (fullContent) {
-        const supabase2 = await createClient();
-        await supabase2.from("messages").insert({
-          session_id: sessionId,
-          role: "assistant",
-          content: fullContent,
-        });
+
+      // P2 fix: flush any remaining buffered content after the read loop ends.
+      // lines.pop() holds back the last (possibly incomplete) line on each
+      // iteration. If the stream's final SSE event arrives without a trailing
+      // newline, that line never enters the for-loop above. Drain it here so
+      // the last token is not silently dropped from fullContent.
+      if (lineBuffer.startsWith("data: ")) {
+        const data = lineBuffer.slice(6).trimEnd();
+        if (data && data !== "[DONE]") {
+          try {
+            const json = JSON.parse(data);
+            const delta = json.choices?.[0]?.delta?.content ?? "";
+            fullContent += delta;
+          } catch {
+            // skip malformed
+          }
+        }
       }
-      await writer.close();
+    } finally {
+      // P1 fix: persist inside its own try/catch so a DB error cannot prevent
+      // writer.close() from running. Without this, any rejection from
+      // createClient() or .insert() would leave the TransformStream readable
+      // open forever, hanging the browser's reader.read() indefinitely.
+      try {
+        if (fullContent) {
+          const supabase2 = await createClient();
+          await supabase2.from("messages").insert({
+            session_id: sessionId,
+            role: "assistant",
+            content: fullContent,
+          });
+        }
+      } catch (err) {
+        console.error("[brat.gg] Failed to persist assistant message:", err);
+      } finally {
+        await writer.close();
+      }
     }
   })();
 

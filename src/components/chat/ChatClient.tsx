@@ -115,6 +115,23 @@ export default function ChatClient({
         }
       }
 
+      // P2 fix: flush any remaining buffered line after the read loop ends
+      // (mirrors the server-side fix — guards against a final SSE event that
+      // arrives without a trailing newline).
+      if (lineBuffer.startsWith("data: ")) {
+        const data = lineBuffer.slice(6).trimEnd();
+        if (data && data !== "[DONE]") {
+          try {
+            const json = JSON.parse(data);
+            const delta = json.choices?.[0]?.delta?.content ?? "";
+            fullContent += delta;
+            setStreamingContent(fullContent);
+          } catch {
+            // skip malformed
+          }
+        }
+      }
+
       // Commit assistant message to state
       const assistantMsg: Message = {
         id: crypto.randomUUID(),
