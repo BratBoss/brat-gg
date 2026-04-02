@@ -84,17 +84,25 @@ export default function ChatClient({
 
       const decoder = new TextDecoder();
       let fullContent = "";
+      let lineBuffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        // Parse SSE lines
-        for (const line of chunk.split("\n")) {
+
+        // Accumulate into lineBuffer so SSE events split across read() calls
+        // are reassembled before parsing. lines.pop() retains any incomplete
+        // trailing line for the next iteration.
+        lineBuffer += chunk;
+        const lines = lineBuffer.split("\n");
+        lineBuffer = lines.pop() ?? "";
+
+        for (const line of lines) {
           if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") break;
+            const data = line.slice(6).trimEnd();
+            if (data === "[DONE]") continue;
             try {
               const json = JSON.parse(data);
               const delta = json.choices?.[0]?.delta?.content ?? "";

@@ -139,6 +139,7 @@ export async function POST(request: Request) {
 
   (async () => {
     let fullContent = "";
+    let lineBuffer = "";
     const reader = orResponse.body!.getReader();
 
     try {
@@ -147,27 +148,34 @@ export async function POST(request: Request) {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        // Collect content from SSE chunks
-        for (const line of chunk.split("\n")) {
+        await writer.write(encoder.encode(chunk));
+
+        // Accumulate into lineBuffer so SSE events split across read() calls
+        // are reassembled before parsing. lines.pop() retains any incomplete
+        // trailing line for the next iteration.
+        lineBuffer += chunk;
+        const lines = lineBuffer.split("\n");
+        lineBuffer = lines.pop() ?? "";
+
+        for (const line of lines) {
           if (line.startsWith("data: ")) {
-            const data = line.slice(6);
+            const data = line.slice(6).trimEnd();
             if (data === "[DONE]") continue;
             try {
               const json = JSON.parse(data);
               const delta = json.choices?.[0]?.delta?.content ?? "";
               fullContent += delta;
             } catch {
-              // skip
+              // skip malformed chunk
             }
           }
         }
-
-        await writer.write(encoder.encode(chunk));
       }
     } finally {
-      await writer.close();
-
-      // Persist assistant message after stream completes
+      // Persist assistant message BEFORE closing the stream.
+      // writer.close() signals EOF to Vercel, which may immediately freeze
+      // the function. Inserting first ensures the write completes while the
+      // serverless invocation is still live.
       if (fullContent) {
         const supabase2 = await createClient();
         await supabase2.from("messages").insert({
@@ -176,6 +184,7 @@ export async function POST(request: Request) {
           content: fullContent,
         });
       }
+      await writer.close();
     }
   })();
 
