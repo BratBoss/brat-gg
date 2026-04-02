@@ -29,7 +29,8 @@ export default function JournalPage() {
               {entry.body}
             </div>
             {entry.status && (
-              <p className="mt-4 text-[#5e7d5a] text-xs tracking-wide">
+              <p className="mt-4 text-[#8aaa8c] text-sm leading-relaxed">
+                <span className="text-[#6b8a6e] font-medium">Status:</span>{" "}
                 {entry.status}
               </p>
             )}
