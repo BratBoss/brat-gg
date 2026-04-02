@@ -341,10 +341,12 @@ function MessageBubble({
             : "bg-[#161d17] border border-[#2a3a2c] text-[#c4d8c0]"
         }`}
       >
-        <p className="whitespace-pre-wrap break-words">{message.content}</p>
-        {isStreaming && (
-          <span className="inline-block w-1.5 h-3.5 bg-[#8fb88a] ml-0.5 animate-blink rounded-sm" />
-        )}
+        <p className="whitespace-pre-wrap break-words">
+          {message.content}
+          {isStreaming && (
+            <span className="inline-block w-1.5 h-3.5 bg-[#8fb88a] ml-0.5 animate-blink rounded-sm" />
+          )}
+        </p>
       </div>
     </div>
   );
