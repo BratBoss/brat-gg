@@ -276,11 +276,27 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 
 ## Known bugs
 
-### BUG-002: Assistant message streaming is janky
+### BUG-002: Assistant message streaming appears visually unstable
 
-**Symptom:** Aria's reply is visible live while streaming but there is a cursor always blinking and the message steaming experience is not as smooth as it could be for the end user.
+**Symptom:** During Aria’s response generation, the assistant message is rendered live as it streams, but the presentation feels visually unstable. A blinking cursor remains visible throughout streaming, and the text appearance/update behavior does not feel smooth from the user’s perspective.
 
-**Root cause (primary): Currently unknown, investigation needed.
+**Expected behavior:** Assistant messages should stream in smoothly and feel visually polished. Any cursor or typing indicator should appear intentional and should not distract from the reading experience.
+
+**Impact:** Makes the chat experience feel less refined and can distract users while reading a live response.
+
+**Root cause (primary):** Currently unknown, investigation needed.
+
+**Files affected:** Unknown
+
+**Status:** Not assigned
+
+### BUG-003: Mobile chat view allows unintended horizontal scrolling
+
+**Symptom:** In the mobile chat interface, horizontal swiping causes the page to move off its intended viewport bounds. This reveals overflow space on one side and clips visible content on the other.
+
+**Expected behavior:** The mobile chat layout should be constrained to the viewport width with no horizontal scroll or lateral page movement.
+
+**Root cause (primary):** Unknown; investigation needed.
 
 **Files affected:** Unknown
 
@@ -297,3 +313,4 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 | Long-context handling | No message trimming. Long conversations will hit model context limits. |
 | Additional companions | Placeholder assets for Marcy and Sylvie exist in `public/images/brats/`. No routes, content, or sessions. |
 | OAuth login | Only magic link in V1. Supabase supports OAuth providers with minimal changes when needed. |
+| Dependency Update | TypeScript 6.0 and Supabase SSR v2.100.0 |
