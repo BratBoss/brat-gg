@@ -29,9 +29,11 @@ export default function JournalPage() {
               {entry.body}
             </div>
             {entry.status && (
-              <p className="mt-4 text-[#5e7d5a] text-xs tracking-wide">
-                {entry.status}
-              </p>
+              <div className="mt-5 pt-3 border-t border-[#2a3a2c]/70">
+                <p className="text-[#5e7d5a] text-[11px] italic tracking-[0.08em] uppercase">
+                  {entry.status}
+                </p>
+              </div>
             )}
           </article>
         ))}
