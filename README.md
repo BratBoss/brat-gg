@@ -277,17 +277,15 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 
 ## Known bugs
 
-### BUG-001: Assistant messages lost after streaming (chat persistence)
+### BUG-002: Assistant message streaming is janky
 
-**Symptom:** Aria's reply is visible live while streaming. After leaving and returning to the chat, the user message is still present but the assistant reply is missing from history.
+**Symptom:** Aria's reply is visible live while streaming but there is a cursor always blinking and the message steaming experience is not as smooth as it could be for the end user.
 
-**Root cause (primary):** In `src/app/api/chat/route.ts`, the Supabase insert for the assistant message runs inside a fire-and-forget `async` IIFE. The response stream (`readable`) is returned to the browser immediately. The IIFE closes the `TransformStream` writer first (signalling EOF to the response), then attempts to insert the assistant message. On Vercel serverless, closing the response stream causes the runtime to consider the function complete and it may freeze/terminate the execution context before the Supabase insert can run. The insert is silently dropped. Fix: swap the order — persist to Supabase before calling `writer.close()`.
+**Root cause (primary): Currently unknown, investigation needed.
 
-**Root cause (secondary):** SSE chunk parsing in both `route.ts` and `ChatClient.tsx` splits each raw read buffer on `"\n"` directly. Because TCP is a byte stream, a single SSE event (one `data: {...}` line) can be split across two successive `reader.read()` calls. Both halves then fail `JSON.parse` and are silently discarded. On the server side this causes `fullContent` to be shorter than the actual response; on the client side it causes the streamed display to be similarly truncated. Fix: maintain a `lineBuffer` string across reads, only processing complete lines.
+**Files affected:** Unknown
 
-**Files affected:** `src/app/api/chat/route.ts`, `src/components/chat/ChatClient.tsx`
-
-**Status:** Not yet fixed.
+**Status:** Not assigned
 
 ---
 
@@ -300,4 +298,3 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 | Long-context handling | No message trimming. Long conversations will hit model context limits. |
 | Additional companions | Placeholder assets for Marcy and Sylvie exist in `public/images/brats/`. No routes, content, or sessions. |
 | OAuth login | Only magic link in V1. Supabase supports OAuth providers with minimal changes when needed. |
-| Public profiles | All user data is private. No public-facing profile pages. |
