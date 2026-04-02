@@ -23,16 +23,14 @@ export default async function AriaLayout({
     <div className="flex-1 flex flex-col min-h-screen">
       {/* Top nav */}
       <header className="border-b border-[#2a3a2c] px-6 py-4 flex items-center justify-between gap-6 flex-wrap">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm">
+        {/* Brand */}
+        <div className="flex items-center text-sm">
           <Link
             href="/"
             className="text-[#4a5e4c] hover:text-[#8aaa8c] transition-colors"
           >
             brat.gg
           </Link>
-          <span className="text-[#2a3a2c]">/</span>
-          <span className="text-[#6b8a6e]">Glade</span>
         </div>
 
         {/* Section nav */}
