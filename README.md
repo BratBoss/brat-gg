@@ -276,19 +276,47 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 
 ## Known bugs (None currently)
 
-### BUG-XXX: Short descriptive title
+### BUG-004: Chat messages intermittently hang while sending
 
 **Summary:**
-Short plain-language description of the bug.
+Chat message sending sometimes becomes stuck mid-request, leaving the interface in a loading/disabled state until the page is refreshed.
 
 **Current behavior:**
-Describe what the user currently experiences.
+On the live chat page, sending a message sometimes works normally, but other times the message send appears to hang. The send button remains spinning, the chat input stays greyed out/disabled, and no response arrives. Refreshing the page temporarily restores functionality, but the issue can recur after one or several successful messages.
 
 **Expected behavior:**
-Describe the intended or correct behavior.
+Each message send should either complete successfully with a streamed assistant response or fail gracefully with a visible error state. The chat UI should never remain indefinitely stuck in a loading/disabled state.
 
 **Impact:**
-Explain why this bug matters. Note whether it affects usability, polish, correctness, or reliability.
+This affects core chat reliability and makes the product feel unstable. It can interrupt conversations, force page refreshes, and reduce trust in the chat experience.
+
+**Root cause (primary):**
+Unknown / under investigation
+
+**Files affected:**
+Unknown / under investigation
+
+**Status:**
+Not assigned
+
+### BUG-005: Gallery images return 404 errors in production
+
+**Summary:**
+The Aria gallery page is attempting to load image files that return 404 errors in production.
+**Current behavior:**
+When visiting the gallery, the browser console shows repeated 404 errors for image paths such as:
+- `/images/aria/gallery/1.JPG`
+- `/images/aria/gallery/2.JPG`
+- `/images/aria/gallery/3.JPG`
+- `/images/aria/gallery/4.JPG`
+
+The requests appear to fail consistently in production, indicating the referenced files are missing, misnamed, or using incorrect path/casing.
+
+**Expected behavior:**
+All gallery image references should resolve successfully in production with no 404 errors, and the gallery should load its intended images without missing assets or console noise.
+
+**Impact:**
+This affects correctness and presentation quality. Missing gallery assets make the site feel unfinished and can break user trust, while repeated console errors add noise during debugging and testing.
 
 **Root cause (primary):**
 Unknown / under investigation
