@@ -185,28 +185,21 @@ export default function ChatClient({
         </button>
       </div>
 
-      {/* No API key warning */}
-      {!profile.hasApiKey && (
-        <div className="px-6 py-3 bg-[#161d17] border-b border-[#2a3a2c]">
-          <p className="text-[#6b8a6e] text-xs">
-            Add your OpenRouter API key in{" "}
-            <a href="/brats/aria/settings" className="text-[#8aaa8c] underline">
-              Settings
-            </a>{" "}
-            to start chatting.
-          </p>
-        </div>
-      )}
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
         {allDisplayMessages.length === 0 && (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-[#4a5e4c] text-sm">
-              {profile.hasApiKey
-                ? "Say something to begin."
-                : "Add your OpenRouter API key in Settings to start chatting."}
-            </p>
+          <div className="flex items-center justify-center h-full text-center">
+            {profile.hasApiKey ? (
+              <p className="text-[#4a5e4c] text-sm">Say something to begin.</p>
+            ) : (
+              <p className="text-[#4a5e4c] text-sm">
+                Add your OpenRouter API key in{" "}
+                <a href="/brats/aria/settings" className="text-[#8aaa8c] underline hover:text-[#d6e4d2] transition-colors">
+                  Settings
+                </a>{" "}
+                to start chatting.
+              </p>
+            )}
           </div>
         )}
 
