@@ -290,18 +290,6 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 
 **Status:** Not assigned
 
-### BUG-003: Mobile chat view allows unintended horizontal scrolling
-
-**Symptom:** In the mobile chat interface, horizontal swiping causes the page to move off its intended viewport bounds. This reveals overflow space on one side and clips visible content on the other.
-
-**Expected behavior:** The mobile chat layout should be constrained to the viewport width with no horizontal scroll or lateral page movement.
-
-**Root cause (primary):** Unknown; investigation needed.
-
-**Files affected:** Unknown
-
-**Status:** Not assigned
-
 ---
 
 ## Deferred / future work (Listed top to bottom most important to least)
