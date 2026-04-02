@@ -17,7 +17,7 @@ export default function GladePage() {
         {/* Portrait */}
         <div className="relative w-40 h-52 shrink-0 rounded-md overflow-hidden border border-[#2a3a2c] bg-[#161d17]">
           <Image
-            src="/images/aria/portrait.svg"
+            src="/images/aria/portrait.jpg"
             alt="Aria"
             fill
             className="object-cover object-top"

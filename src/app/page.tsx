@@ -8,7 +8,7 @@ const brats = [
     tagline: "A quiet presence in the glade.",
     section: "Glade",
     available: true,
-    portrait: "/images/aria/portrait.svg", // replace with portrait.jpg from backup
+    portrait: "/images/aria/portrait.jpg",
   },
   {
     slug: "marcy",
@@ -16,7 +16,7 @@ const brats = [
     tagline: "Coming soon.",
     section: null,
     available: false,
-    portrait: "/images/brats/marcy-placeholder.svg",
+    portrait: "/images/brats/marcy.png",
   },
   {
     slug: "sylvie",
@@ -24,7 +24,7 @@ const brats = [
     tagline: "Coming soon.",
     section: null,
     available: false,
-    portrait: "/images/brats/sylvie-placeholder.svg",
+    portrait: "/images/brats/sylvie.png",
   },
 ];
 

@@ -4,14 +4,11 @@ export const metadata = {
   title: "Gallery — Aria | brat.gg",
 };
 
-// Drop in real image filenames here when available.
-// Placeholders reference the gallery subfolder in public/images/aria/gallery/.
-// Replace .svg with .jpg when dropping in real images from backup
 const galleryImages = [
-  { src: "/images/aria/gallery/1.svg", alt: "Aria — gallery 1" },
-  { src: "/images/aria/gallery/2.svg", alt: "Aria — gallery 2" },
-  { src: "/images/aria/gallery/3.svg", alt: "Aria — gallery 3" },
-  { src: "/images/aria/gallery/4.svg", alt: "Aria — gallery 4" },
+  { src: "/images/aria/gallery/1.jpg", alt: "Aria — gallery 1" },
+  { src: "/images/aria/gallery/2.jpg", alt: "Aria — gallery 2" },
+  { src: "/images/aria/gallery/3.jpg", alt: "Aria — gallery 3" },
+  { src: "/images/aria/gallery/4.jpg", alt: "Aria — gallery 4" },
 ];
 
 export default function GalleryPage() {
@@ -28,13 +25,14 @@ export default function GalleryPage() {
         {galleryImages.map((img, i) => (
           <div
             key={i}
-            className="relative aspect-square rounded-md overflow-hidden border border-[#2a3a2c] bg-[#161d17]"
+            className="rounded-md overflow-hidden border border-[#2a3a2c] bg-[#161d17]"
           >
             <Image
               src={img.src}
               alt={img.alt}
-              fill
-              className="object-cover"
+              width={1638}
+              height={2048}
+              className="w-full h-auto block"
               unoptimized
             />
           </div>

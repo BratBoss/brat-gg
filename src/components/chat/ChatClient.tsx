@@ -163,7 +163,7 @@ export default function ChatClient({
         <div className="flex items-center gap-3">
           <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#2a3a2c] bg-[#161d17] shrink-0">
             <Image
-              src="/images/aria/portrait.svg"
+              src="/images/aria/portrait.jpg"
               alt="Aria"
               fill
               className="object-cover object-top"
@@ -297,7 +297,7 @@ function MessageBubble({
           )
         ) : (
           <Image
-            src="/images/aria/portrait.svg"
+            src="/images/aria/portrait.jpg"
             alt="Aria"
             fill
             className="object-cover object-top"
