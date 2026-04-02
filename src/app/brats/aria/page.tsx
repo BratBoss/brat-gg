@@ -15,7 +15,7 @@ export default function GladePage() {
       {/* About */}
       <section className="flex flex-col sm:flex-row gap-8 items-start">
         {/* Portrait */}
-        <div className="relative w-48 h-64 shrink-0 rounded-md overflow-hidden border border-[#2a3a2c] bg-[#161d17]">
+        <div className="relative w-48 h-64 shrink-0 rounded-md overflow-hidden border border-[#2a3a2c] bg-[#161d17] sm:mt-2">
           <Image
             src="/images/aria/portrait.jpg"
             alt="Aria"
