@@ -36,9 +36,18 @@ export default function ChatClient({
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Smooth scroll when a new committed message is added.
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamingContent]);
+  }, [messages]);
+
+  // Instant scroll during streaming — avoids competing smooth-scroll animations
+  // on every chunk which causes visible scroll jitter.
+  useEffect(() => {
+    if (streamingContent) {
+      bottomRef.current?.scrollIntoView({ behavior: "instant" });
+    }
+  }, [streamingContent]);
 
   async function handleSend() {
     const content = input.trim();
@@ -334,7 +343,7 @@ function MessageBubble({
       >
         <p className="whitespace-pre-wrap break-words">{message.content}</p>
         {isStreaming && (
-          <span className="inline-block w-1.5 h-3.5 bg-[#8fb88a] ml-0.5 animate-pulse rounded-sm" />
+          <span className="inline-block w-1.5 h-3.5 bg-[#8fb88a] ml-0.5 animate-blink rounded-sm" />
         )}
       </div>
     </div>

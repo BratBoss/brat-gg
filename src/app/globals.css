@@ -28,6 +28,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Streaming cursor blink — sharp step blink, ~1 s cycle */
+@keyframes cursor-blink {
+  50% { opacity: 0; }
+}
+.animate-blink {
+  animation: cursor-blink 1s step-end infinite;
+}
+
 /* Subtle scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
