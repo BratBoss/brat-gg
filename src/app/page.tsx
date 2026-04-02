@@ -39,7 +39,7 @@ export default function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="px-8 pt-16 pb-12 max-w-2xl">
+      <section className="px-8 pt-16 pb-12 max-w-3xl">
         <h1 className="text-3xl font-light text-[#d6e4d2] mb-3 tracking-tight">
           A quiet home for digital companions.
         </h1>
