@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 const brats = [
   {
@@ -87,12 +86,11 @@ function BratCard({
     <div className="flex flex-col">
       {/* Portrait area */}
       <div className="relative aspect-[3/4] w-full bg-[#0f1410] overflow-hidden">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={brat.portrait}
           alt={brat.name}
-          fill
-          className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
-          unoptimized
+          className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
         />
         {comingSoon && (
           <div className="absolute inset-0 flex items-center justify-center bg-[#0f1410]/60">
