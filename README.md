@@ -274,21 +274,30 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 
 ---
 
-## Known bugs
+## Known bugs (None currently)
 
-### BUG-002: Assistant message streaming appears visually unstable
+### BUG-XXX: Short descriptive title
 
-**Symptom:** During Aria’s response generation, the assistant message is rendered live as it streams, but the presentation feels visually unstable. A blinking cursor remains visible throughout streaming, and the text appearance/update behavior does not feel smooth from the user’s perspective.
+**Summary:**
+Short plain-language description of the bug.
 
-**Expected behavior:** Assistant messages should stream in smoothly and feel visually polished. Any cursor or typing indicator should appear intentional and should not distract from the reading experience.
+**Current behavior:**
+Describe what the user currently experiences.
 
-**Impact:** Makes the chat experience feel less refined and can distract users while reading a live response.
+**Expected behavior:**
+Describe the intended or correct behavior.
 
-**Root cause (primary):** Currently unknown, investigation needed.
+**Impact:**
+Explain why this bug matters. Note whether it affects usability, polish, correctness, or reliability.
 
-**Files affected:** Unknown
+**Root cause (primary):**
+Unknown / under investigation
 
-**Status:** Not assigned
+**Files affected:**
+Unknown / under investigation
+
+**Status:**
+Not assigned
 
 ---
 

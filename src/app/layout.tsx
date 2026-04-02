@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,11 +18,15 @@ export const metadata: Metadata = {
   description: "A quiet home for digital companions.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Reading request headers opts the entire app into dynamic rendering, which
+  // is required for per-request CSP nonces to be injected into the SSR output.
+  await headers();
+
   return (
     <html
       lang="en"

@@ -268,8 +268,7 @@ export default function ChatClient({
             placeholder="Write something…"
             rows={1}
             disabled={streaming || !profile.hasApiKey}
-            className="flex-1 resize-none bg-[#161d17] border border-[#2a3a2c] rounded-md px-4 py-3 text-sm text-[#d6e4d2] placeholder-[#4a5e4c] focus:outline-none focus:border-[#5e7d5a] transition-colors disabled:opacity-40 max-h-36 overflow-y-auto"
-            style={{ minHeight: "44px" }}
+            className="flex-1 resize-none bg-[#161d17] border border-[#2a3a2c] rounded-md px-4 py-3 text-sm text-[#d6e4d2] placeholder-[#4a5e4c] focus:outline-none focus:border-[#5e7d5a] transition-colors disabled:opacity-40 max-h-36 overflow-y-auto min-h-[44px]"
           />
           <button
             onClick={handleSend}
