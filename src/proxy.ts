@@ -7,6 +7,7 @@ export async function proxy(request: NextRequest) {
   // A fresh nonce per request is required for nonce-based CSP to be effective.
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
+  const supabaseOrigin = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL!).origin;
 
   const cspHeader = [
     "default-src 'self'",
@@ -15,10 +16,10 @@ export async function proxy(request: NextRequest) {
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' 'nonce-${nonce}'`,
     // Supabase storage hosts user avatars; data: for Next.js image edge cases.
-    "img-src 'self' https://qpksfmgcqygmbrbinfpa.supabase.co data:",
+    `img-src 'self' ${supabaseOrigin} data:`,
     "font-src 'self'",
     // Supabase (auth OTP, DB queries, storage uploads); OpenRouter is server-side only.
-    "connect-src 'self' https://qpksfmgcqygmbrbinfpa.supabase.co wss://qpksfmgcqygmbrbinfpa.supabase.co",
+    `connect-src 'self' ${supabaseOrigin} ${supabaseOrigin.replace("https://", "wss://")}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
