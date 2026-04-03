@@ -274,7 +274,7 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 
 ---
 
-## Known bugs (None currently)
+## Known bugs
 
 ### BUG-004: Chat messages intermittently hang while sending
 
