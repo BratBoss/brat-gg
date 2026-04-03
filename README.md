@@ -333,10 +333,10 @@ Not assigned
 
 | Feature | Notes |
 |---|---|
-| CSP and CORS | Priority security improvements. |
 | Encrypt Conversation History | Conversation history should be encrypted at rest. |
 | Long-context handling | No message trimming. Long conversations will hit model context limits. |
 | Multiple chat sessions per user | Currently one session per user per brat (latest wins). No UI for session history. |
 | Additional companions | Placeholder assets for Marcy and Sylvie exist in `public/images/brats/`. No routes, content, or sessions. |
 | OAuth login | Only magic link in V1. Supabase supports OAuth providers with minimal changes when needed. |
 | Conversation summarization / memory | `{{HISTORY_SUMMARY}}` variable is wired in the prompt template but not populated. Intentionally deferred — no design for the summarization trigger or storage yet. |
+| CORS | Security improvement |
