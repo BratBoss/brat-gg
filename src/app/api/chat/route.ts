@@ -191,6 +191,13 @@ export async function POST(request: Request) {
           console.error("[brat.gg] Failed to persist conversation summary:", updateError.message);
         } else {
           historySummary = newSummary;
+          // Advance the in-memory watermark to match what was just written to DB.
+          // Without this, the context builder below computes the watermark from
+          // the stale pre-refresh count and re-sends messages that are already
+          // covered by the new summary. In the corrupt-summary recovery path
+          // (where lastSummarizedCount was reset to 0) this is especially bad:
+          // the full chat history would be sent as raw context on this request.
+          lastSummarizedCount = chatMessages.length;
         }
       }
     } catch (err) {
