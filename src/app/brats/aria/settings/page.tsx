@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import SettingsClient from "@/components/aria/SettingsClient";
+import SettingsClient from "@/components/settings/SettingsClient";
 
 export const metadata = {
   title: "Settings | brat.gg",

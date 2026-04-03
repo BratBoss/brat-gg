@@ -211,8 +211,8 @@ src/
 │       └── auth/signout/route.ts   # POST /api/auth/signout
 │
 ├── components/
-│   ├── chat/ChatClient.tsx         # Full chat UI (streaming, input, new chat)
-│   └── aria/SettingsClient.tsx     # Settings form (avatar upload, key entry)
+│   ├── chat/ChatClient.tsx         # Full chat UI (streaming, input, new chat) — brat-aware via props
+│   └── settings/SettingsClient.tsx # Settings form (avatar upload, key entry) — user-global, not per-brat
 │
 ├── lib/
 │   ├── crypto.ts                   # AES-256-GCM helpers for API keys and message history

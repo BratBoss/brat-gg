@@ -176,7 +176,7 @@ export default function SettingsClient({
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="How should Aria address you?"
+            placeholder="What should your companions call you?"
             maxLength={60}
             className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors"
           />
