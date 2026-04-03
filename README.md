@@ -9,8 +9,7 @@ V1 ships one companion: Aria.
 ## V1 product scope
 
 **In scope:**
-- Magic-link auth (passwordless, email only)
-- OAuth login (GitHub, Google) via Supabase
+- Magic-link auth (passwordless, email + OAuth GitHub via Supabase)
 - Per-user chat with Aria, with conversation history stored encrypted at rest
 - Streaming responses via OpenRouter (user-supplied API key)
 - User settings: display name, avatar, API key, model selection
@@ -117,8 +116,8 @@ The build runs TypeScript type-checking. A separate runtime-startup check in `sr
 2. Supabase sends a magic link to that email.
 3. User clicks the link → lands on `/auth/callback?code=...` → Supabase exchanges the code for a session cookie.
 
-**OAuth (GitHub / Google):**
-1. User clicks "Continue with GitHub/Google" on `/login`.
+**OAuth (GitHub):**
+1. User clicks "Continue with GitHub" on `/login`.
 2. Browser is redirected to the provider's consent page (full-page redirect, not a popup).
 3. Provider redirects back to `/auth/callback?code=...` → same `exchangeCodeForSession` call → session cookie set.
 
@@ -145,17 +144,6 @@ The `/auth/callback` route already handles OAuth — no extra route is needed. T
    (Find this in Supabase → Authentication → Providers → GitHub.)
 4. Copy the **Client ID** and generate a **Client Secret**.
 5. In Supabase → Authentication → Providers → GitHub: paste the Client ID and Client Secret, then **Save**.
-
-### Google
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com) → **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**.
-2. Application type: **Web application**.
-3. Add an **Authorized redirect URI**:
-   ```
-   https://<your-supabase-project-ref>.supabase.co/auth/v1/callback
-   ```
-4. Copy the **Client ID** and **Client Secret**.
-5. In Supabase → Authentication → Providers → Google: paste both values, then **Save**.
 
 **Supabase redirect URL allow-list:** In Supabase → Authentication → URL Configuration, ensure your app URL (and `localhost:3000` for local dev) is in the **Redirect URLs** list. The exact URL used is `${NEXT_PUBLIC_APP_URL}/auth/callback`.
 
@@ -334,5 +322,4 @@ Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_K
 |---|---|
 | Multiple chat sessions per user | Currently one session per user per brat (latest wins). No UI for session history. |
 | Additional companions | Placeholder assets for Marcy and Sylvie exist in `public/images/brats/`. No routes, content, or sessions. |
-| Multiple OAuth providers | GitHub and Google ship in V1. Adding Discord, Twitter, etc. is one array entry in `login/page.tsx` + provider setup in Supabase dashboard. |
 | CORS | Security improvement |
