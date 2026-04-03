@@ -19,7 +19,7 @@ export async function proxy(request: NextRequest) {
     `img-src 'self' ${supabaseOrigin} data:`,
     "font-src 'self'",
     // Supabase (auth OTP, DB queries, storage uploads); OpenRouter is server-side only.
-    `connect-src 'self' ${supabaseOrigin} ${supabaseOrigin.replace("https://", "wss://")}`,
+    `connect-src 'self' ${supabaseOrigin} ${supabaseOrigin.replace(/^http/, "ws")}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
