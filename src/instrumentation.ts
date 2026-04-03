@@ -9,7 +9,8 @@ export async function register() {
   // Guard: only run in the Node.js runtime (not Edge).
   // The crypto module is not available in the Edge runtime.
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    const { assertEncryptionConfigured } = await import("@/lib/crypto");
+    const { assertEncryptionConfigured, assertMessageEncryptionConfigured } = await import("@/lib/crypto");
     assertEncryptionConfigured();
+    assertMessageEncryptionConfigured();
   }
 }

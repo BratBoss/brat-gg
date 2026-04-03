@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { decryptMessage } from "@/lib/crypto";
 import ChatClient from "@/components/chat/ChatClient";
 
 export const metadata = {
@@ -42,16 +43,21 @@ export default async function ChatPage() {
 
   const session = await getOrCreateSession(supabase, user.id, "aria");
 
-  const { data: messages } = await supabase
+  const { data: rawMessages } = await supabase
     .from("messages")
     .select("id, role, content, created_at")
     .eq("session_id", session.id)
     .order("created_at", { ascending: true });
 
+  const messages = (rawMessages ?? []).map((m) => ({
+    ...m,
+    content: decryptMessage(m.content),
+  }));
+
   return (
     <ChatClient
       sessionId={session.id}
-      initialMessages={messages ?? []}
+      initialMessages={messages}
       profile={{
         displayName: profile?.display_name ?? null,
         avatarUrl: avatarDisplayUrl,
