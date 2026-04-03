@@ -10,7 +10,7 @@ V1 ships one companion: Aria.
 
 **In scope:**
 - Magic-link auth (passwordless, email only)
-- Per-user chat with Aria, with full conversation history
+- Per-user chat with Aria, with full conversation history stored encrypted at rest
 - Streaming responses via OpenRouter (user-supplied API key)
 - User settings: display name, avatar, API key, model selection
 - Private avatar storage (Supabase Storage, signed URLs)
@@ -127,6 +127,12 @@ There are no passwords and no OAuth providers in V1.
 - The encrypted blob is stored as `iv:authTag:ciphertext` (all hex).
 - The plaintext key is never logged or returned to the client.
 
+### How message history is stored
+
+- User and assistant message content is encrypted at rest with `MESSAGE_ENCRYPTION_KEY` before being written to `messages.content`.
+- Message history is decrypted server-side when loading chat history for the UI and when building the context sent to OpenRouter.
+- Existing legacy plaintext rows remain readable for compatibility; new writes are encrypted.
+
 ### Key existence vs. key value
 
 Pages that only need to know *whether* a key exists use a HEAD-only count query instead of selecting the encrypted blob. This prevents the encrypted value from being serialized into server component output unnecessarily.
@@ -161,11 +167,11 @@ Browser (ChatClient)
       → load encrypted API key from profiles
       → decrypt key (AES-256-GCM)
       → build system prompt (reads system-prompt.md, injects user name + date)
-      → persist user message to messages table
-      → load conversation history
+      → persist user message to messages table (encrypted at rest)
+      → load conversation history and decrypt server-side
       → POST to OpenRouter (stream: true)
       → pipe SSE stream back to browser
-      → after stream ends: persist assistant message to messages table
+      → after stream ends: persist assistant message to messages table (encrypted at rest)
   ← SSE stream (text/event-stream)
 Browser
   → parses SSE chunks (data: {...})
@@ -241,19 +247,22 @@ brat.gg is BYOK by design. The server never calls OpenRouter with a site credent
 **2. No ENCRYPTION_SECRET fallback.**
 `src/lib/crypto.ts` throws `ConfigError` if `ENCRYPTION_SECRET` is absent or not exactly 64 hex characters. There is no dev/test fallback. This is intentional: silent crypto degradation is worse than a startup failure.
 
-**3. Never return the encrypted key blob to the client.**
+**3. No MESSAGE_ENCRYPTION_KEY fallback.**
+`src/lib/crypto.ts` throws `ConfigError` if `MESSAGE_ENCRYPTION_KEY` is absent or not exactly 64 hex characters. There is no dev/test fallback. This is intentional for the same reason: silent degradation is worse than a startup failure.
+
+**4. Never return the encrypted key blob to the client.**
 The `openrouter_api_key` column must not appear in any query that is serialized into a server component or API response. Use the HEAD-only count pattern when you only need to know if a key exists.
 
-**4. `profiles.avatar_url` stores a storage path, not a URL.**
+**5. `profiles.avatar_url` stores a storage path, not a URL.**
 The avatars bucket is private. Server components generate signed URLs (`createSignedUrl`) with a short TTL for display. Do not store public URLs, do not make the bucket public.
 
-**5. `system-prompt.md` is the single source of truth for Aria's prompt.**
+**6. `system-prompt.md` is the single source of truth for Aria's prompt.**
 `buildSystemPrompt.ts` reads the file; it does not contain a copy. Do not paste the prompt back into the `.ts` file. The file is bundled into the Vercel lambda via `outputFileTracingIncludes` in `next.config.ts` — do not remove that config entry.
 
-**6. RLS is the primary data isolation boundary.**
+**7. RLS is the primary data isolation boundary.**
 Row Level Security is enabled on `profiles`, `chat_sessions`, and `messages`. The API routes also verify ownership explicitly (belt-and-suspenders), but RLS is the authoritative gate. Do not disable RLS to work around a query issue.
 
-**7. `src/proxy.ts` must call `supabase.auth.getUser()`.**
+**8. `src/proxy.ts` must call `supabase.auth.getUser()`.**
 This is required by `@supabase/ssr` to keep session cookies fresh. Removing or skipping this call breaks SSR auth. The comment in the file is there for a reason.
 
 ---
