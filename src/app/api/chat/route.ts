@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { decryptSecret, encryptMessage, decryptMessage, ConfigError } from "@/lib/crypto";
-import { buildAriaSystemPrompt } from "@/content/aria/buildSystemPrompt";
 import { getBratBySlug } from "@/content/brats";
+import { getSystemPromptBuilder } from "@/content/brats/getSystemPrompt";
 import {
   shouldRefreshSummary,
   getMessagesToSummarize,
@@ -59,6 +59,18 @@ export async function POST(request: Request) {
 
   if (!sessionRow) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
+  }
+
+  // Resolve the prompt builder for this session's companion before doing any
+  // expensive work. An unrecognised slug means the session references a
+  // companion that does not yet have a real system prompt — fail clearly
+  // rather than silently falling back to a different companion.
+  const buildSystemPrompt = getSystemPromptBuilder(sessionRow.brat_slug as string);
+  if (!buildSystemPrompt) {
+    return NextResponse.json(
+      { error: `Unsupported companion: ${sessionRow.brat_slug}` },
+      { status: 400 }
+    );
   }
 
   // Get user's profile — key, model, and display name for the system prompt
@@ -187,7 +199,7 @@ export async function POST(request: Request) {
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  const systemPrompt = buildAriaSystemPrompt({
+  const systemPrompt = buildSystemPrompt({
     userName: profile.display_name ?? null,
     currentDate: new Date().toLocaleDateString("en-US", {
       weekday: "long",

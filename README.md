@@ -157,11 +157,11 @@ Browser (ChatClient)
       → verify session belongs to user
       → load encrypted API key from profiles
       → decrypt key (AES-256-GCM)
-      → build system prompt (reads system-prompt.md, injects user name + date)
+      → resolve prompt builder by brat_slug (400 if unsupported companion)
       → persist user message to messages table (encrypted at rest)
       → load conversation history and decrypt server-side
       → refresh conversation summary if threshold reached (blocking, before model call)
-      → inject summary into system prompt via buildAriaSystemPrompt({ historySummary })
+      → build system prompt via resolved builder (reads companion's system-prompt.md, injects user name + date + summary)
       → build context window: all unsummarized messages (from watermark to end) when summary exists, else trim to 50
       → POST to OpenRouter (stream: true)
       → pipe SSE stream back to browser
@@ -173,7 +173,9 @@ Browser
   → on [DONE]: commits assistant message to local state
 ```
 
-**System prompt source of truth:** `src/content/aria/system-prompt.md`. Edit that file to change Aria's behavior. `src/content/aria/buildSystemPrompt.ts` reads it at module load, strips the documentation header (everything before the first `---`), and injects template variables. Do not duplicate the prompt text in `buildSystemPrompt.ts`.
+**System prompt source of truth:** Each companion's `system-prompt.md` lives under `src/content/{slug}/`. Edit that file to change the companion's behavior. `buildSystemPrompt.ts` in the same directory reads it at module load, strips the documentation header (everything before the first `---`), and injects template variables. Do not duplicate the prompt text in `buildSystemPrompt.ts`.
+
+**Prompt resolution:** `src/content/brats/getSystemPrompt.ts` maps brat slugs to their builder functions. The chat route resolves the builder from `chat_sessions.brat_slug`. Adding a new companion requires a prompt file, a builder, and one registry entry in that file.
 
 **Template variables in `system-prompt.md`:**
 - `{{USER_NAME}}` — user's display name, or "someone who hasn't shared their name yet"
@@ -219,11 +221,15 @@ src/
 │       ├── client.ts               # Browser Supabase client
 │       └── server.ts               # Server Supabase client (SSR, cookies)
 │
-└── content/aria/
-    ├── system-prompt.md            # Aria's character and behavior (canonical)
-    ├── buildSystemPrompt.ts        # Reads system-prompt.md, injects variables
-    ├── about.ts                    # Aria's tagline and bio
-    └── journal.json                # Journal entries
+├── content/
+│   ├── brats/
+│   │   ├── index.ts                # Canonical companion metadata (slug, name, portrait…)
+│   │   └── getSystemPrompt.ts      # Prompt builder registry — maps slug → builder function
+│   └── aria/
+│       ├── system-prompt.md        # Aria's character and behavior (canonical)
+│       ├── buildSystemPrompt.ts    # Reads system-prompt.md, injects variables
+│       ├── about.ts                # Aria's tagline and bio
+│       └── journal.json            # Journal entries
 
 supabase/
 └── migrations/
@@ -252,8 +258,8 @@ The `openrouter_api_key` column must not appear in any query that is serialized 
 **5. `profiles.avatar_url` stores a storage path, not a URL.**
 The avatars bucket is private. Server components generate signed URLs (`createSignedUrl`) with a short TTL for display. Do not store public URLs, do not make the bucket public.
 
-**6. `system-prompt.md` is the single source of truth for Aria's prompt.**
-`buildSystemPrompt.ts` reads the file; it does not contain a copy. Do not paste the prompt back into the `.ts` file. The file is bundled into the Vercel lambda via `outputFileTracingIncludes` in `next.config.ts` — do not remove that config entry.
+**6. Each companion's `system-prompt.md` is the single source of truth for that companion's prompt.**
+The companion's `buildSystemPrompt.ts` reads the file; it does not contain a copy. Do not paste prompt text back into the `.ts` file. All companion prompt files are bundled into the Vercel lambda via the `./src/content/*/system-prompt.md` glob in `outputFileTracingIncludes` (`next.config.ts`) — do not remove that config entry.
 
 **7. RLS is the primary data isolation boundary.**
 Row Level Security is enabled on `profiles`, `chat_sessions`, and `messages`. The API routes also verify ownership explicitly (belt-and-suspenders), but RLS is the authoritative gate. Do not disable RLS to work around a query issue.
@@ -276,7 +282,7 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 
 Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_KEY`; do not reuse the same secret for both.
 
-**`outputFileTracingIncludes`:** `next.config.ts` includes `src/content/aria/system-prompt.md` in the `/api/chat` serverless bundle. Without this, the file is absent from the Vercel lambda and the chat route throws at runtime. This key is at the top level of the Next.js config object (not under `experimental` — that location was removed in Next.js 16).
+**`outputFileTracingIncludes`:** `next.config.ts` includes all `src/content/*/system-prompt.md` files in the `/api/chat` serverless bundle via a glob. Without this, the files are absent from the Vercel lambda and the chat route throws at runtime. This key is at the top level of the Next.js config object (not under `experimental` — that location was removed in Next.js 16).
 
 ---
 
