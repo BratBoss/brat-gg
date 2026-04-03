@@ -5,6 +5,16 @@ import { NextResponse } from "next/server";
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
+// Maximum number of messages sent to OpenRouter per request.
+// Full history is always retained in the database; only the context window sent
+// to the model is trimmed. When conversation summarization is implemented, lower
+// this limit and inject the summary via buildAriaSystemPrompt({ historySummary }).
+const HISTORY_CONTEXT_LIMIT = 50;
+
+function trimHistory<T>(messages: T[], limit: number): T[] {
+  return messages.length > limit ? messages.slice(messages.length - limit) : messages;
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
 
@@ -104,6 +114,10 @@ export async function POST(request: Request) {
     content: decryptMessage(m.content),
   }));
 
+  // Trim to the most recent HISTORY_CONTEXT_LIMIT messages before sending to
+  // OpenRouter. Full history is kept in the database and visible in the UI.
+  const contextMessages = trimHistory(chatMessages, HISTORY_CONTEXT_LIMIT);
+
   // Stream from OpenRouter
   const orResponse = await fetch(OPENROUTER_API_URL, {
     method: "POST",
@@ -117,7 +131,7 @@ export async function POST(request: Request) {
       model,
       messages: [
         { role: "system", content: systemPrompt },
-        ...chatMessages,
+        ...contextMessages,
       ],
       stream: true,
     }),
