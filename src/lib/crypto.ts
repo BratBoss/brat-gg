@@ -36,7 +36,7 @@ function getKeyFor(envVar: string): Buffer {
     );
   }
 
-  if (secret.length !== 64) {
+  if (!/^[0-9a-fA-F]{64}$/.test(secret)) {
     throw new ConfigError(
       `${envVar} must be exactly 64 hex characters (32 bytes). ` +
         "Generate one with: openssl rand -hex 32"
@@ -152,8 +152,16 @@ export function decryptMessage(stored: string): string {
   const key = getMessageKey(); // ConfigError propagates as-is
   const payload = stored.slice(ENC_PREFIX.length);
   const parts = payload.split(":");
-  if (parts.length !== 3) {
-    throw new Error("Stored message has unexpected format");
+  // Validate structural shape: iv (24 hex chars / 12 bytes), authTag (32 hex chars / 16 bytes),
+  // ciphertext (non-empty hex). If the payload doesn't match, the "enc:" prefix was coincidental
+  // plaintext — return the original value unchanged rather than crashing chat history.
+  if (
+    parts.length !== 3 ||
+    !/^[0-9a-fA-F]{24}$/.test(parts[0]) ||
+    !/^[0-9a-fA-F]{32}$/.test(parts[1]) ||
+    !/^[0-9a-fA-F]+$/.test(parts[2])
+  ) {
+    return stored; // not a valid encrypted payload — treat as plaintext
   }
   const [ivHex, tagHex, ctHex] = parts;
   const iv = Buffer.from(ivHex, "hex");
