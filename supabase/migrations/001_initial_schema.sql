@@ -34,10 +34,13 @@ create policy "Users can update their own profile"
 
 -- Chat sessions: one active session per user per brat
 create table if not exists public.chat_sessions (
-  id          uuid primary key default gen_random_uuid(),
-  user_id     uuid not null references auth.users(id) on delete cascade,
-  brat_slug   text not null,
-  created_at  timestamptz not null default now()
+  id                             uuid primary key default gen_random_uuid(),
+  user_id                        uuid not null references auth.users(id) on delete cascade,
+  brat_slug                      text not null,
+  history_summary                text,
+  summary_updated_at             timestamptz,
+  last_summarized_message_count  integer not null default 0,
+  created_at                     timestamptz not null default now()
 );
 
 alter table public.chat_sessions enable row level security;
