@@ -88,8 +88,7 @@ src/
 
 supabase/
 └── migrations/
-    ├── 001_initial_schema.sql      # Full schema: tables, RLS, storage, trigger
-    └── 002_conversation_summary.sql  # Adds summary columns to chat_sessions
+    └── 001_initial_schema.sql      # Full schema: tables, RLS, storage, trigger
 ```
 
 ---
