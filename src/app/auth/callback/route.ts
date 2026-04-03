@@ -4,7 +4,13 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  // Constrain `next` to safe internal paths to prevent open-redirect attacks.
+  // Reject anything that starts with "//" (protocol-relative) or contains ":"
+  // (protocol) or "@" (userinfo), all of which can redirect to external hosts.
+  const rawNext = searchParams.get("next") ?? "/";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") && !rawNext.includes(":") && !rawNext.includes("@")
+    ? rawNext
+    : "/";
 
   if (code) {
     const supabase = await createClient();
