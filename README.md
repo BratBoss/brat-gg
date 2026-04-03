@@ -6,7 +6,7 @@ V1 ships one companion: Aria.
 
 ---
 
-## Current scope
+## V1 product scope
 
 **In scope:**
 - Magic-link auth (passwordless, email + OAuth GitHub via Supabase)
@@ -39,121 +39,9 @@ V1 ships one companion: Aria.
 
 ---
 
-## Quick start
+## Project structure (high level)
 
-### Prerequisites
-
-- Node.js 20+
-- A Supabase project (free tier works)
-- An OpenRouter account (for testing chat)
-
-### Setup
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Copy env template and fill in values
-cp .env.example .env.local
-
-# 3. Run the Supabase migration (paste into Supabase SQL editor, or use CLI)
-# supabase/migrations/001_initial_schema.sql
-
-# 4. Start dev server
-npm run dev
 ```
-
-Open `http://localhost:3000`.
-
-### Build check
-
-```bash
-npm run build
-```
-
-The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `MESSAGE_ENCRYPTION_KEY` and `ENCRYPTION_SECRET` — this is distinct from the build step.
-
-### Environment variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (labelled **Publishable key** in the Supabase dashboard) |
-| `NEXT_PUBLIC_APP_URL` | Yes | Base URL, e.g. `http://localhost:3000` or `https://brat.gg`. Used as the auth redirect origin. |
-| `ENCRYPTION_SECRET` | Yes | 64 hex characters (32 bytes). Encrypts user API keys at rest. Generate: `openssl rand -hex 32`. **Server-only. Never expose.** |
-| `MESSAGE_ENCRYPTION_KEY` | Yes | 64 hex characters (32 bytes). Encrypts user message history at rest. Generate: `openssl rand -hex 32`. **Server-only. Never expose.** |
-
-`ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_KEY` have no fallback. A missing or malformed value causes the server to abort at runtime startup — `src/instrumentation.ts` validates it before the first request is served. The build itself does not fail on this; the failure happens when the server process initialises.
-
-### Supabase setup
-
-1. Create a new Supabase project.
-2. Run `supabase/migrations/001_initial_schema.sql` in the Supabase SQL editor. This creates:
-   - `profiles` table (user settings, encrypted API key, avatar path)
-   - `chat_sessions` table
-   - `messages` table
-   - Row Level Security policies on all three tables
-   - Private `avatars` storage bucket with per-user RLS
-   - Trigger to auto-create a profile row on new signup
-3. In Supabase Auth settings: enable **Email** provider, enable **magic links**.
-4. Set the site URL and redirect URL to match `NEXT_PUBLIC_APP_URL`.
-5. *(Optional)* Enable OAuth providers — see [OAuth provider setup](#oauth-provider-setup) below.
-
-**Avatar bucket:** must be `public: false`. Access is via signed URLs generated server-side (1-hour TTL). Never grant public read access to this bucket.
-
----
-
-## Authentication
-
-### Auth flow
-
-**Magic link:**
-1. User submits email on `/login`.
-2. Supabase sends a magic link to that email.
-3. User clicks the link → lands on `/auth/callback?code=...` → Supabase exchanges the code for a session cookie.
-
-**OAuth (GitHub):**
-1. User clicks "Continue with GitHub" on `/login`.
-2. Browser is redirected to the provider's consent page (full-page redirect, not a popup).
-3. Provider redirects back to `/auth/callback?code=...` → same `exchangeCodeForSession` call → session cookie set.
-
-**Common to both:**
-4. `src/proxy.ts` (Next.js middleware) refreshes the session cookie on every request.
-5. Protected pages (`/brats/aria/*`) call `supabase.auth.getUser()` server-side and redirect to `/login` if no session.
-
-A `?next=` query param on `/login` is preserved through both flows — it is forwarded to `/auth/callback` via the `redirectTo` URL and then used as the post-login destination.
-
-### OAuth provider setup
-
-The `/auth/callback` route already handles OAuth — no extra route is needed. To enable a provider:
-
-#### GitHub
-
-1. Go to [github.com/settings/developers](https://github.com/settings/developers) → **OAuth Apps** → **New OAuth App**.
-2. Set **Homepage URL** to your app URL (e.g. `https://brat.gg`).
-3. Set **Authorization callback URL** to:
-   ```
-   https://<your-supabase-project-ref>.supabase.co/auth/v1/callback
-   ```
-   (Find this in Supabase → Authentication → Providers → GitHub.)
-4. Copy the **Client ID** and generate a **Client Secret**.
-5. In Supabase → Authentication → Providers → GitHub: paste the Client ID and Client Secret, then **Save**.
-
-**Supabase redirect URL allow-list:** In Supabase → Authentication → URL Configuration, ensure your app URL (and `localhost:3000` for local dev) is in the **Redirect URLs** list. The exact URL used is `${NEXT_PUBLIC_APP_URL}/auth/callback`.
-
-**Adding more providers:** Add an entry to the `OAUTH_PROVIDERS` array in `src/app/login/page.tsx`. The provider string must match a Supabase-supported provider name (e.g. `"discord"`, `"twitter"`).
-
-### Local auth note
-
-Magic-link testing only works when Supabase Auth site/redirect URLs match the environment you are using. If `NEXT_PUBLIC_APP_URL` points at localhost but Supabase is configured only for production, the email link may return to the production site instead of local dev.
-
----
-
-## Architecture
-
-### Project structure (high level)
-
-```text
 src/
 ├── proxy.ts                        # Session cookie refresh (Next.js middleware)
 ├── instrumentation.ts              # Startup: validates ENCRYPTION_SECRET and MESSAGE_ENCRYPTION_KEY
@@ -204,45 +92,119 @@ supabase/
     └── 002_conversation_summary.sql  # Adds summary columns to chat_sessions
 ```
 
-### Chat flow
+---
 
-```text
-Browser (ChatClient)
-  → POST /api/chat { sessionId, message }
-      → auth check (Supabase)
-      → verify session belongs to user
-      → load encrypted API key from profiles
-      → decrypt key (AES-256-GCM)
-      → resolve prompt builder by brat_slug (400 if unsupported companion)
-      → persist user message to messages table (encrypted at rest)
-      → load conversation history and decrypt server-side
-      → refresh conversation summary if threshold reached (blocking, before model call)
-      → build system prompt via resolved builder (reads companion's system-prompt.md, injects user name + date + summary)
-      → build context window: all unsummarized messages (from watermark to end) when summary exists, else trim to 50
-      → POST to OpenRouter (stream: true)
-      → pipe SSE stream back to browser
-      → after stream ends: persist assistant message to messages table (encrypted at rest)
-  ← SSE stream (text/event-stream)
-Browser
-  → parses SSE chunks (data: {...})
-  → accumulates content into streaming state
-  → on [DONE]: commits assistant message to local state
+## Local development
+
+### Prerequisites
+
+- Node.js 20+
+- A Supabase project (free tier works)
+- An OpenRouter account (for testing chat)
+
+### Setup
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Copy env template and fill in values
+cp .env.example .env.local
+
+# 3. Run the Supabase migration (paste into Supabase SQL editor, or use CLI)
+# supabase/migrations/001_initial_schema.sql
+
+# 4. Start dev server
+npm run dev
 ```
 
-### Prompt resolution
+Open `http://localhost:3000`.
 
-**System prompt source of truth:** Each companion's `system-prompt.md` lives under `src/content/{slug}/`. Edit that file to change the companion's behavior. `buildSystemPrompt.ts` in the same directory reads it at module load, strips the documentation header (everything before the first `---`), and injects template variables. Do not duplicate the prompt text in `buildSystemPrompt.ts`.
+**Local auth note:** Magic-link testing only works when Supabase Auth site/redirect URLs match the environment you are using. If `NEXT_PUBLIC_APP_URL` points at localhost but Supabase is configured only for production, the email link may return to the production site instead of local dev.
 
-**Prompt resolution:** `src/content/brats/getSystemPrompt.ts` maps brat slugs to their builder functions. The chat route resolves the builder from `chat_sessions.brat_slug`. Adding a new companion requires a prompt file, a builder, and one registry entry in that file.
+### Build check
 
-**Template variables in `system-prompt.md`:**
-- `{{USER_NAME}}` — user's display name, or "someone who hasn't shared their name yet"
-- `{{CURRENT_DATE}}` — formatted date, injected at request time
-- `{{HISTORY_SUMMARY}}` — per-session encrypted summary of older messages; injected when present, removed cleanly when absent
+```bash
+npm run build
+```
+
+The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `MESSAGE_ENCRYPTION_KEY` and `ENCRYPTION_SECRET` — this is distinct from the build step.
 
 ---
 
-## Data and security model
+## Environment variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (labelled **Publishable key** in the Supabase dashboard) |
+| `NEXT_PUBLIC_APP_URL` | Yes | Base URL, e.g. `http://localhost:3000` or `https://brat.gg`. Used as the auth redirect origin. |
+| `ENCRYPTION_SECRET` | Yes | 64 hex characters (32 bytes). Encrypts user API keys at rest. Generate: `openssl rand -hex 32`. **Server-only. Never expose.** |
+| `MESSAGE_ENCRYPTION_KEY` | Yes | 64 hex characters (32 bytes). Encrypts user message history at rest. Generate: `openssl rand -hex 32`. **Server-only. Never expose.** |
+
+`ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_KEY` have no fallback. A missing or malformed value causes the server to abort at runtime startup — `src/instrumentation.ts` validates it before the first request is served. The build itself does not fail on this; the failure happens when the server process initialises.
+
+---
+
+## Supabase setup
+
+1. Create a new Supabase project.
+2. Run `supabase/migrations/001_initial_schema.sql` in the Supabase SQL editor. This creates:
+   - `profiles` table (user settings, encrypted API key, avatar path)
+   - `chat_sessions` table
+   - `messages` table
+   - Row Level Security policies on all three tables
+   - Private `avatars` storage bucket with per-user RLS
+   - Trigger to auto-create a profile row on new signup
+3. In Supabase Auth settings: enable **Email** provider, enable **magic links**.
+4. Set the site URL and redirect URL to match `NEXT_PUBLIC_APP_URL`.
+5. *(Optional)* Enable OAuth providers — see [OAuth provider setup](#oauth-provider-setup) below.
+
+**Avatar bucket:** must be `public: false`. Access is via signed URLs generated server-side (1-hour TTL). Never grant public read access to this bucket.
+
+---
+
+## Auth flow
+
+**Magic link:**
+1. User submits email on `/login`.
+2. Supabase sends a magic link to that email.
+3. User clicks the link → lands on `/auth/callback?code=...` → Supabase exchanges the code for a session cookie.
+
+**OAuth (GitHub):**
+1. User clicks "Continue with GitHub" on `/login`.
+2. Browser is redirected to the provider's consent page (full-page redirect, not a popup).
+3. Provider redirects back to `/auth/callback?code=...` → same `exchangeCodeForSession` call → session cookie set.
+
+**Common to both:**
+4. `src/proxy.ts` (Next.js middleware) refreshes the session cookie on every request.
+5. Protected pages (`/brats/aria/*`) call `supabase.auth.getUser()` server-side and redirect to `/login` if no session.
+
+A `?next=` query param on `/login` is preserved through both flows — it is forwarded to `/auth/callback` via the `redirectTo` URL and then used as the post-login destination.
+
+---
+
+## OAuth provider setup
+
+The `/auth/callback` route already handles OAuth — no extra route is needed. To enable a provider:
+
+### GitHub
+
+1. Go to [github.com/settings/developers](https://github.com/settings/developers) → **OAuth Apps** → **New OAuth App**.
+2. Set **Homepage URL** to your app URL (e.g. `https://brat.gg`).
+3. Set **Authorization callback URL** to:
+   ```
+   https://<your-supabase-project-ref>.supabase.co/auth/v1/callback
+   ```
+   (Find this in Supabase → Authentication → Providers → GitHub.)
+4. Copy the **Client ID** and generate a **Client Secret**.
+5. In Supabase → Authentication → Providers → GitHub: paste the Client ID and Client Secret, then **Save**.
+
+**Supabase redirect URL allow-list:** In Supabase → Authentication → URL Configuration, ensure your app URL (and `localhost:3000` for local dev) is in the **Redirect URLs** list. The exact URL used is `${NEXT_PUBLIC_APP_URL}/auth/callback`.
+
+**Adding more providers:** Add an entry to the `OAUTH_PROVIDERS` array in `src/app/login/page.tsx`. The provider string must match a Supabase-supported provider name (e.g. `"discord"`, `"twitter"`).
+
+---
 
 ### How keys are stored
 
@@ -268,6 +230,42 @@ supabase.from("profiles")
   .eq("id", user.id)
   .not("openrouter_api_key", "is", null)
 ```
+
+---
+
+## Chat flow
+
+```
+Browser (ChatClient)
+  → POST /api/chat { sessionId, message }
+      → auth check (Supabase)
+      → verify session belongs to user
+      → load encrypted API key from profiles
+      → decrypt key (AES-256-GCM)
+      → resolve prompt builder by brat_slug (400 if unsupported companion)
+      → persist user message to messages table (encrypted at rest)
+      → load conversation history and decrypt server-side
+      → refresh conversation summary if threshold reached (blocking, before model call)
+      → build system prompt via resolved builder (reads companion's system-prompt.md, injects user name + date + summary)
+      → build context window: all unsummarized messages (from watermark to end) when summary exists, else trim to 50
+      → POST to OpenRouter (stream: true)
+      → pipe SSE stream back to browser
+      → after stream ends: persist assistant message to messages table (encrypted at rest)
+  ← SSE stream (text/event-stream)
+Browser
+  → parses SSE chunks (data: {...})
+  → accumulates content into streaming state
+  → on [DONE]: commits assistant message to local state
+```
+
+**System prompt source of truth:** Each companion's `system-prompt.md` lives under `src/content/{slug}/`. Edit that file to change the companion's behavior. `buildSystemPrompt.ts` in the same directory reads it at module load, strips the documentation header (everything before the first `---`), and injects template variables. Do not duplicate the prompt text in `buildSystemPrompt.ts`.
+
+**Prompt resolution:** `src/content/brats/getSystemPrompt.ts` maps brat slugs to their builder functions. The chat route resolves the builder from `chat_sessions.brat_slug`. Adding a new companion requires a prompt file, a builder, and one registry entry in that file.
+
+**Template variables in `system-prompt.md`:**
+- `{{USER_NAME}}` — user's display name, or "someone who hasn't shared their name yet"
+- `{{CURRENT_DATE}}` — formatted date, injected at request time
+- `{{HISTORY_SUMMARY}}` — per-session encrypted summary of older messages; injected when present, removed cleanly when absent
 
 ---
 
@@ -318,7 +316,7 @@ Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_K
 
 ---
 
-## Deferred / future work
+## Deferred / future work (Listed top to bottom most important to least)
 
 | Feature | Notes |
 |---|---|
