@@ -147,16 +147,6 @@ supabase.from("profiles")
   .not("openrouter_api_key", "is", null)
 ```
 
-### Error taxonomy
-
-| Condition | Error type | HTTP status |
-|---|---|---|
-| User has no key saved | Expected state | 422 — user can fix in Settings |
-| Key blob is malformed | Data error | 422 — user should re-enter key |
-| `ENCRYPTION_SECRET` missing/wrong | `ConfigError` | 500 — deployment issue |
-
-`ConfigError` is a named class (`src/lib/crypto.ts`). API routes check `err instanceof ConfigError` to distinguish the 500 case from the 422 case.
-
 ---
 
 ## Chat flow
@@ -287,33 +277,6 @@ Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_K
 
 ---
 
-## Known bugs
-
-### BUG-004: Chat messages intermittently hang while sending
-
-**Summary:**
-Chat message sending sometimes becomes stuck mid-request, leaving the interface in a loading/disabled state until the page is refreshed.
-
-**Current behavior:**
-On the live chat page, sending a message sometimes works normally, but other times the message send appears to hang. The send button remains spinning, the chat input stays greyed out/disabled, and no response arrives. Refreshing the page temporarily restores functionality, but the issue can recur after one or several successful messages.
-
-**Expected behavior:**
-Each message send should either complete successfully with a streamed assistant response or fail gracefully with a visible error state. The chat UI should never remain indefinitely stuck in a loading/disabled state.
-
-**Impact:**
-This affects core chat reliability and makes the product feel unstable. It can interrupt conversations, force page refreshes, and reduce trust in the chat experience.
-
-**Root cause (primary):**
-Unknown / under investigation
-
-**Files affected:**
-Unknown / under investigation
-
-**Status:**
-Not assigned
-
----
-
 ## Deferred / future work (Listed top to bottom most important to least)
 
 | Feature | Notes |
@@ -323,14 +286,3 @@ Not assigned
 | OAuth login | Only magic link in V1. Supabase supports OAuth providers with minimal changes when needed. |
 | Conversation summarization / memory | `{{HISTORY_SUMMARY}}` variable is wired in the prompt template but not populated. Intentionally deferred — no design for the summarization trigger or storage yet. |
 | CORS | Security improvement |
-
-## Favicons / app icons
-
-app/favicon.ico → multi-size ICO (16, 32, 48)
-app/icon.png → 512 × 512
-app/apple-icon.png → 180 × 180
-public/safari-pinned-tab.svg → black SVG, transparent bg
-public/icon-192.png → 192 × 192
-public/icon-512.png → 512 × 512
-public/icon-192-maskable.png → 192 × 192
-public/icon-512-maskable.png → 512 × 512
