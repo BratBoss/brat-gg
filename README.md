@@ -193,7 +193,7 @@ Browser
 ```
 src/
 ├── proxy.ts                        # Session cookie refresh (Next.js middleware)
-├── instrumentation.ts              # Startup: validates ENCRYPTION_SECRET
+├── instrumentation.ts              # Startup: validates ENCRYPTION_SECRET and MESSAGE_ENCRYPTION_KEY
 │
 ├── app/
 │   ├── layout.tsx                  # Root layout
@@ -219,7 +219,7 @@ src/
 │   └── aria/SettingsClient.tsx     # Settings form (avatar upload, key entry)
 │
 ├── lib/
-│   ├── crypto.ts                   # AES-256-GCM encrypt/decrypt + ConfigError
+│   ├── crypto.ts                   # AES-256-GCM helpers for API keys and message history
 │   └── supabase/
 │       ├── client.ts               # Browser Supabase client
 │       └── server.ts               # Server Supabase client (SSR, cookies)
