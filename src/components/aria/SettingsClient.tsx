@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 type InitialValues = {
@@ -131,12 +130,11 @@ export default function SettingsClient({
           <div className="flex items-center gap-5">
             <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[#2a3a2c] bg-[#161d17] shrink-0">
               {avatarDisplayUrl ? (
-                <Image
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
                   src={avatarDisplayUrl}
                   alt="Your avatar"
-                  fill
-                  className="object-cover"
-                  unoptimized
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[#4a5e4c] text-sm">

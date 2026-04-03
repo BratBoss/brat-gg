@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ariaAbout } from "@/content/aria/about";
 import journalEntries from "@/content/aria/journal.json";
@@ -16,12 +15,11 @@ export default function GladePage() {
       <section className="flex flex-col sm:flex-row gap-8 items-start">
         {/* Portrait */}
         <div className="relative w-48 h-64 shrink-0 rounded-md overflow-hidden border border-[#2a3a2c] bg-[#161d17] sm:mt-2">
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/images/aria/portrait.jpg"
             alt="Aria"
-            fill
-            className="object-cover object-top"
-            unoptimized
+            className="absolute inset-0 h-full w-full object-cover object-top"
           />
         </div>
 

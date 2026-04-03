@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useTransition } from "react";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 type Message = {
@@ -196,12 +195,11 @@ export default function ChatClient({
       <div className="flex items-center justify-between px-6 py-3 border-b border-[#2a3a2c]">
         <div className="flex items-center gap-3">
           <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#2a3a2c] bg-[#161d17] shrink-0">
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/images/aria/portrait.jpg"
               alt="Aria"
-              fill
-              className="object-cover object-top"
-              unoptimized
+              className="absolute inset-0 h-full w-full object-cover object-top"
             />
           </div>
           <div>
@@ -309,12 +307,11 @@ function MessageBubble({
       <div className="relative w-7 h-7 rounded-full overflow-hidden border border-[#2a3a2c] bg-[#161d17] shrink-0 mt-0.5">
         {isUser ? (
           userAvatarUrl ? (
-            <Image
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src={userAvatarUrl}
               alt={userLabel}
-              fill
-              className="object-cover"
-              unoptimized
+              className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[10px] text-[#6b8a6e]">
@@ -322,12 +319,11 @@ function MessageBubble({
             </div>
           )
         ) : (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src="/images/aria/portrait.jpg"
             alt="Aria"
-            fill
-            className="object-cover object-top"
-            unoptimized
+            className="absolute inset-0 h-full w-full object-cover object-top"
           />
         )}
       </div>

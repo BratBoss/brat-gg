@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 export const metadata = {
@@ -31,13 +30,11 @@ export default function GalleryPage() {
             rel="noreferrer"
             className="group block rounded-lg overflow-hidden border border-[#2a3a2c] bg-[#161d17] hover:border-[#5e7d5a] transition-colors"
           >
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={img.src}
               alt={img.alt}
-              width={1638}
-              height={2048}
               className="w-full h-auto block transition-transform duration-300 group-hover:scale-[1.01]"
-              unoptimized
             />
           </Link>
         ))}
