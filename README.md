@@ -299,34 +299,6 @@ Unknown / under investigation
 **Status:**
 Not assigned
 
-### BUG-005: Gallery images return 404 errors in production
-
-**Summary:**
-The Aria gallery page is attempting to load image files that return 404 errors in production.
-**Current behavior:**
-When visiting the gallery, the browser console shows repeated 404 errors for image paths such as:
-- `/images/aria/gallery/1.JPG`
-- `/images/aria/gallery/2.JPG`
-- `/images/aria/gallery/3.JPG`
-- `/images/aria/gallery/4.JPG`
-
-The requests appear to fail consistently in production, indicating the referenced files are missing, misnamed, or using incorrect path/casing.
-
-**Expected behavior:**
-All gallery image references should resolve successfully in production with no 404 errors, and the gallery should load its intended images without missing assets or console noise.
-
-**Impact:**
-This affects correctness and presentation quality. Missing gallery assets make the site feel unfinished and can break user trust, while repeated console errors add noise during debugging and testing.
-
-**Root cause (primary):**
-Unknown / under investigation
-
-**Files affected:**
-Unknown / under investigation
-
-**Status:**
-Not assigned
-
 ---
 
 ## Deferred / future work (Listed top to bottom most important to least)
