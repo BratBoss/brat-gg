@@ -9,15 +9,15 @@ const ALGORITHM = "aes-256-gcm";
 // OpenRouter API keys; no site-managed provider keys exist.
 // ENCRYPTION_SECRET protects those keys at rest in the database.
 //
-// There is no fallback key. If ENCRYPTION_SECRET is absent or
-// malformed the server refuses to run. This is intentional:
-// silent crypto degradation is worse than a loud startup failure.
+// MESSAGE_ENCRYPTION_KEY protects conversation message content at
+// rest. Both keys are required. Neither has a fallback — silent
+// crypto degradation is worse than a loud startup failure.
 // ---------------------------------------------------------------
 
 /**
- * Thrown when the server's ENCRYPTION_SECRET env var is absent or
- * malformed. This is a deployment/configuration error — not a user
- * error. API routes should respond with 500 and a generic message.
+ * Thrown when a required encryption env var is absent or malformed.
+ * This is a deployment/configuration error — not a user error.
+ * API routes should respond with 500 and a generic message.
  */
 export class ConfigError extends Error {
   constructor(message: string) {
@@ -26,25 +26,32 @@ export class ConfigError extends Error {
   }
 }
 
-function getKey(): Buffer {
-  const secret = process.env.ENCRYPTION_SECRET;
+function getKeyFor(envVar: string): Buffer {
+  const secret = process.env[envVar];
 
   if (!secret) {
     throw new ConfigError(
-      "ENCRYPTION_SECRET is not set. " +
-        "This is required for BYOK key storage. " +
+      `${envVar} is not set. ` +
         "Generate one with: openssl rand -hex 32"
     );
   }
 
   if (secret.length !== 64) {
     throw new ConfigError(
-      "ENCRYPTION_SECRET must be exactly 64 hex characters (32 bytes). " +
+      `${envVar} must be exactly 64 hex characters (32 bytes). ` +
         "Generate one with: openssl rand -hex 32"
     );
   }
 
   return Buffer.from(secret, "hex");
+}
+
+function getKey(): Buffer {
+  return getKeyFor("ENCRYPTION_SECRET");
+}
+
+function getMessageKey(): Buffer {
+  return getKeyFor("MESSAGE_ENCRYPTION_KEY");
 }
 
 /**
@@ -54,6 +61,14 @@ function getKey(): Buffer {
  */
 export function assertEncryptionConfigured(): void {
   getKey(); // throws ConfigError if misconfigured
+}
+
+/**
+ * Call this at server startup to catch a missing or malformed
+ * MESSAGE_ENCRYPTION_KEY before any request is served.
+ */
+export function assertMessageEncryptionConfigured(): void {
+  getMessageKey(); // throws ConfigError if misconfigured
 }
 
 /**
@@ -83,6 +98,62 @@ export function decryptSecret(stored: string): string {
   const parts = stored.split(":");
   if (parts.length !== 3) {
     throw new Error("Stored value has unexpected format");
+  }
+  const [ivHex, tagHex, ctHex] = parts;
+  const iv = Buffer.from(ivHex, "hex");
+  const tag = Buffer.from(tagHex, "hex");
+  const ct = Buffer.from(ctHex, "hex");
+  const decipher = createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(tag);
+  return decipher.update(ct).toString("utf8") + decipher.final("utf8");
+}
+
+// ---------------------------------------------------------------
+// Message content encryption (MESSAGE_ENCRYPTION_KEY)
+//
+// Encrypted payloads are prefixed with "enc:" so that legacy
+// plaintext rows can be read back transparently without a backfill.
+// New rows are always written encrypted.
+// ---------------------------------------------------------------
+
+const ENC_PREFIX = "enc:";
+
+/**
+ * Encrypts a message content string using AES-256-GCM.
+ * Returns "enc:iv:authTag:ciphertext" (all hex-encoded).
+ * Throws ConfigError if MESSAGE_ENCRYPTION_KEY is absent or malformed.
+ */
+export function encryptMessage(plaintext: string): string {
+  const key = getMessageKey();
+  const iv = randomBytes(12); // 96-bit IV — GCM standard
+  const cipher = createCipheriv(ALGORITHM, key, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(plaintext, "utf8"),
+    cipher.final(),
+  ]);
+  const tag = cipher.getAuthTag();
+  return `${ENC_PREFIX}${iv.toString("hex")}:${tag.toString("hex")}:${encrypted.toString("hex")}`;
+}
+
+/**
+ * Decrypts a message content string produced by encryptMessage.
+ *
+ * If the value does not start with "enc:", it is returned as-is —
+ * this handles legacy plaintext rows written before encryption was
+ * enabled, so existing conversation history remains readable.
+ *
+ * Throws ConfigError if MESSAGE_ENCRYPTION_KEY is absent or malformed.
+ * Throws a plain Error if the stored value is malformed or the auth tag fails.
+ */
+export function decryptMessage(stored: string): string {
+  if (!stored.startsWith(ENC_PREFIX)) {
+    return stored; // legacy plaintext row — return unchanged
+  }
+  const key = getMessageKey(); // ConfigError propagates as-is
+  const payload = stored.slice(ENC_PREFIX.length);
+  const parts = payload.split(":");
+  if (parts.length !== 3) {
+    throw new Error("Stored message has unexpected format");
   }
   const [ivHex, tagHex, ctHex] = parts;
   const iv = Buffer.from(ivHex, "hex");

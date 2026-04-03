@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { decryptSecret, ConfigError } from "@/lib/crypto";
+import { decryptSecret, encryptMessage, decryptMessage, ConfigError } from "@/lib/crypto";
 import { buildAriaSystemPrompt } from "@/content/aria/buildSystemPrompt";
 import { NextResponse } from "next/server";
 
@@ -85,11 +85,11 @@ export async function POST(request: Request) {
     // historySummary not wired in v1 — memory design deferred
   });
 
-  // Persist user message
+  // Persist user message (encrypted at rest)
   await supabase.from("messages").insert({
     session_id: sessionId,
     role: "user",
-    content: message,
+    content: encryptMessage(message),
   });
 
   // Load conversation history for context
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
 
   const chatMessages = (history ?? []).map((m) => ({
     role: m.role as "user" | "assistant",
-    content: m.content,
+    content: decryptMessage(m.content),
   }));
 
   // Stream from OpenRouter
@@ -200,7 +200,7 @@ export async function POST(request: Request) {
           await supabase2.from("messages").insert({
             session_id: sessionId,
             role: "assistant",
-            content: fullContent,
+            content: encryptMessage(fullContent),
           });
         }
       } catch (err) {
