@@ -11,8 +11,16 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 // this limit and inject the summary via buildAriaSystemPrompt({ historySummary }).
 const HISTORY_CONTEXT_LIMIT = 50;
 
-function trimHistory<T>(messages: T[], limit: number): T[] {
-  return messages.length > limit ? messages.slice(messages.length - limit) : messages;
+function trimHistory(
+  messages: { role: string; content: string }[],
+  limit: number
+): { role: string; content: string }[] {
+  const trimmed = messages.length > limit ? messages.slice(messages.length - limit) : messages;
+  // Ensure the retained window starts on a user turn. A raw count-based slice
+  // can otherwise produce an orphaned assistant reply at position 0 (no
+  // triggering user prompt), which degrades model context quality.
+  const firstUser = trimmed.findIndex((m) => m.role === "user");
+  return firstUser > 0 ? trimmed.slice(firstUser) : trimmed;
 }
 
 export async function POST(request: Request) {
