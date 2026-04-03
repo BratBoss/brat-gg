@@ -21,6 +21,10 @@ export async function GET(request: Request) {
     }
   }
 
-  // Auth failed — redirect to login with error indicator
-  return NextResponse.redirect(`${origin}/login?error=auth_failed`);
+  // Auth failed — redirect to login with error indicator, preserving next so
+  // retry after cancel/failure still lands the user at their intended page.
+  const failureUrl = next !== "/"
+    ? `${origin}/login?error=auth_failed&next=${encodeURIComponent(next)}`
+    : `${origin}/login?error=auth_failed`;
+  return NextResponse.redirect(failureUrl);
 }
