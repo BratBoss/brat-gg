@@ -20,7 +20,6 @@ V1 ships one companion: Aria.
 - Multiple active chat sessions per user
 - Additional companions (Marcy, Sylvie)
 - OAuth providers (GitHub, Google, etc.)
-- Conversation summarization / long-term memory
 - CORS
 
 ---
@@ -161,7 +160,9 @@ Browser (ChatClient)
       → build system prompt (reads system-prompt.md, injects user name + date)
       → persist user message to messages table (encrypted at rest)
       → load conversation history and decrypt server-side
-      → trim history to the recent-context limit
+      → refresh conversation summary if threshold reached (request-time, async)
+      → inject summary into system prompt via buildAriaSystemPrompt({ historySummary })
+      → trim history to live window (20 msgs w/ summary, 50 msgs without)
       → POST to OpenRouter (stream: true)
       → pipe SSE stream back to browser
       → after stream ends: persist assistant message to messages table (encrypted at rest)
@@ -177,7 +178,7 @@ Browser
 **Template variables in `system-prompt.md`:**
 - `{{USER_NAME}}` — user's display name, or "someone who hasn't shared their name yet"
 - `{{CURRENT_DATE}}` — formatted date, injected at request time
-- `{{HISTORY_SUMMARY}}` — reserved for future memory feature; currently removed cleanly when absent
+- `{{HISTORY_SUMMARY}}` — per-session encrypted summary of older messages; injected when present, removed cleanly when absent
 
 ---
 
@@ -213,6 +214,7 @@ src/
 │
 ├── lib/
 │   ├── crypto.ts                   # AES-256-GCM helpers for API keys and message history
+│   ├── summarize.ts                # Conversation summarization helpers (trigger, slice, OpenRouter call)
 │   └── supabase/
 │       ├── client.ts               # Browser Supabase client
 │       └── server.ts               # Server Supabase client (SSR, cookies)
@@ -225,7 +227,8 @@ src/
 
 supabase/
 └── migrations/
-    └── 001_initial_schema.sql      # Full schema: tables, RLS, storage, trigger
+    ├── 001_initial_schema.sql      # Full schema: tables, RLS, storage, trigger
+    └── 002_conversation_summary.sql  # Adds summary columns to chat_sessions
 ```
 
 ---
@@ -284,5 +287,4 @@ Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_K
 | Multiple chat sessions per user | Currently one session per user per brat (latest wins). No UI for session history. |
 | Additional companions | Placeholder assets for Marcy and Sylvie exist in `public/images/brats/`. No routes, content, or sessions. |
 | OAuth login | Only magic link in V1. Supabase supports OAuth providers with minimal changes when needed. |
-| Conversation summarization / memory | `{{HISTORY_SUMMARY}}` variable is wired in the prompt template but not populated. Intentionally deferred — no design for the summarization trigger or storage yet. |
 | CORS | Security improvement |
