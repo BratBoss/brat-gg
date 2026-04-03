@@ -1,4 +1,4 @@
-// Conversation summarization helpers for Aria's memory feature.
+// Per-session conversation summarization helpers.
 //
 // Summaries are generated at request time when enough new messages have
 // accumulated outside the live context window. The user's own OpenRouter
@@ -22,10 +22,19 @@ export const LIVE_WINDOW = 20;
  */
 const SUMMARY_TRIGGER_DELTA = 10;
 
-const SUMMARIZER_SYSTEM_PROMPT = `You are a compact memory assistant for Aria, an AI companion on brat.gg.
-Produce a concise third-person summary from Aria's perspective.
-Capture: personal details the user shared, topics discussed, emotional tone, any open threads.
-Write factually and specifically. Stay under 350 words. Return only the summary — no preamble or framing.`;
+const SUMMARIZER_SYSTEM_PROMPT = `You are a memory assistant maintaining a compact, updated summary of a conversation.
+
+Your output will be injected into a system prompt as the companion's working memory. Write it accordingly.
+
+Rules:
+- Preserve durable user facts: name, identity details, preferences, personality, ongoing projects, stated goals.
+- Preserve open or unresolved threads that are still relevant to the relationship or conversation.
+- Preserve emotionally significant context: things shared in vulnerability, milestones, meaningful exchanges.
+- When new messages contradict or supersede earlier information, correct or replace the stale version — do not preserve both.
+- Omit trivial banter, one-off small talk, and low-value chatter that carries no forward relevance.
+- Rewrite the entire memory as a single compact artifact. Do not append to or mimic a transcript.
+- Write in third person from the companion's perspective ("The user said...", "They mentioned...").
+- Stay under 350 words. Return only the summary text — no preamble, labels, or framing.`;
 
 /**
  * Returns true when a summary refresh should be triggered for this session.
@@ -64,10 +73,10 @@ export function getMessagesToSummarize(
 }
 
 /**
- * Calls OpenRouter to generate an updated summary for the session.
+ * Calls OpenRouter to produce an updated memory summary for a session.
  *
- * If previousSummary is present, only the new older messages are passed
- * alongside it; the model incorporates them into an updated summary.
+ * If previousSummary is present, only the newly aged-out messages are passed
+ * alongside it and the model rewrites the combined memory as a single artifact.
  * If no previousSummary, the new messages are summarized from scratch.
  *
  * Throws on failure — callers must catch and fall back gracefully.

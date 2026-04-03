@@ -160,7 +160,7 @@ Browser (ChatClient)
       → build system prompt (reads system-prompt.md, injects user name + date)
       → persist user message to messages table (encrypted at rest)
       → load conversation history and decrypt server-side
-      → refresh conversation summary if threshold reached (request-time, async)
+      → refresh conversation summary if threshold reached (blocking, before model call)
       → inject summary into system prompt via buildAriaSystemPrompt({ historySummary })
       → trim history to live window (20 msgs w/ summary, 50 msgs without)
       → POST to OpenRouter (stream: true)
