@@ -17,14 +17,23 @@ type Profile = {
   model: string;
 };
 
+type BratInfo = {
+  name: string;
+  portrait: string;
+  section: string | null;
+  settingsHref: string;
+};
+
 export default function ChatClient({
   sessionId,
   initialMessages,
   profile,
+  brat,
 }: {
   sessionId: string;
   initialMessages: Message[];
   profile: Profile;
+  brat: BratInfo;
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
@@ -197,14 +206,16 @@ export default function ChatClient({
           <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#2a3a2c] bg-[#161d17] shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/images/aria/portrait.jpg"
-              alt="Aria"
+              src={brat.portrait}
+              alt={brat.name}
               className="absolute inset-0 h-full w-full object-cover object-top"
             />
           </div>
           <div>
-            <p className="text-[#d6e4d2] text-sm font-medium leading-none">Aria</p>
-            <p className="text-[#4a5e4c] text-xs mt-0.5">Glade</p>
+            <p className="text-[#d6e4d2] text-sm font-medium leading-none">{brat.name}</p>
+            {brat.section && (
+              <p className="text-[#4a5e4c] text-xs mt-0.5">{brat.section}</p>
+            )}
           </div>
         </div>
 
@@ -226,7 +237,7 @@ export default function ChatClient({
             ) : (
               <p className="text-[#4a5e4c] text-sm">
                 Add your OpenRouter API key in{" "}
-                <a href="/brats/aria/settings" className="text-[#8aaa8c] underline hover:text-[#d6e4d2] transition-colors">
+                <a href={brat.settingsHref} className="text-[#8aaa8c] underline hover:text-[#d6e4d2] transition-colors">
                   Settings
                 </a>{" "}
                 to start chatting.
@@ -241,6 +252,8 @@ export default function ChatClient({
             message={msg}
             userLabel={userLabel}
             userAvatarUrl={profile.avatarUrl}
+            assistantPortrait={brat.portrait}
+            assistantName={brat.name}
             isStreaming={msg.id === "streaming"}
           />
         ))}
@@ -292,11 +305,15 @@ function MessageBubble({
   message,
   userLabel,
   userAvatarUrl,
+  assistantPortrait,
+  assistantName,
   isStreaming,
 }: {
   message: Message;
   userLabel: string;
   userAvatarUrl: string | null;
+  assistantPortrait: string;
+  assistantName: string;
   isStreaming: boolean;
 }) {
   const isUser = message.role === "user";
@@ -321,8 +338,8 @@ function MessageBubble({
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src="/images/aria/portrait.jpg"
-            alt="Aria"
+            src={assistantPortrait}
+            alt={assistantName}
             className="absolute inset-0 h-full w-full object-cover object-top"
           />
         )}

@@ -1,31 +1,7 @@
 import Link from "next/link";
+import { BRATS, type BratMeta } from "@/content/brats";
 
-const brats = [
-  {
-    slug: "aria",
-    name: "Aria",
-    tagline: "A quiet presence in the glade.",
-    section: "Glade",
-    available: true,
-    portrait: "/images/aria/portrait.jpg",
-  },
-  {
-    slug: "marcy",
-    name: "Marcy",
-    tagline: "Coming soon.",
-    section: null,
-    available: false,
-    portrait: "/images/brats/marcy.png",
-  },
-  {
-    slug: "sylvie",
-    name: "Sylvie",
-    tagline: "Coming soon.",
-    section: null,
-    available: false,
-    portrait: "/images/brats/sylvie.png",
-  },
-];
+const brats = BRATS;
 
 export default function HomePage() {
   return (
@@ -79,7 +55,7 @@ function BratCard({
   brat,
   comingSoon = false,
 }: {
-  brat: (typeof brats)[number];
+  brat: BratMeta;
   comingSoon?: boolean;
 }) {
   return (

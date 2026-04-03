@@ -1,10 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Include the system prompt file in the /api/chat serverless bundle.
-  // Without this, the file is not present in the Vercel lambda at runtime.
+  // Include each companion's system prompt in the /api/chat serverless bundle.
+  // Without this the files are absent from the Vercel lambda at runtime.
+  // The glob covers every companion directory under src/content/ — add a new
+  // companion's prompt file there and it is automatically included.
   outputFileTracingIncludes: {
-    "/api/chat": ["./src/content/aria/system-prompt.md"],
+    "/api/chat": ["./src/content/*/system-prompt.md"],
   },
   images: {
     // Allow Supabase storage URLs for user avatars

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { decryptSecret, encryptMessage, decryptMessage, ConfigError } from "@/lib/crypto";
-import { buildAriaSystemPrompt } from "@/content/aria/buildSystemPrompt";
+import { getBratBySlug } from "@/content/brats";
+import { getSystemPromptBuilder } from "@/content/brats/getSystemPrompt";
 import {
   shouldRefreshSummary,
   getMessagesToSummarize,
@@ -48,16 +49,28 @@ export async function POST(request: Request) {
   const { sessionId, message } = body as { sessionId: string; message: string };
 
   // Verify session belongs to this user (RLS also enforces this, belt-and-suspenders).
-  // Also load summary fields here to avoid a second round-trip.
+  // Also load summary fields and brat_slug here to avoid a second round-trip.
   const { data: sessionRow } = await supabase
     .from("chat_sessions")
-    .select("id, history_summary, last_summarized_message_count")
+    .select("id, brat_slug, history_summary, last_summarized_message_count")
     .eq("id", sessionId)
     .eq("user_id", user.id)
     .single();
 
   if (!sessionRow) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
+  }
+
+  // Resolve the prompt builder for this session's companion before doing any
+  // expensive work. An unrecognised slug means the session references a
+  // companion that does not yet have a real system prompt — fail clearly
+  // rather than silently falling back to a different companion.
+  const buildSystemPrompt = getSystemPromptBuilder(sessionRow.brat_slug as string);
+  if (!buildSystemPrompt) {
+    return NextResponse.json(
+      { error: `Unsupported companion: ${sessionRow.brat_slug}` },
+      { status: 400 }
+    );
   }
 
   // Get user's profile — key, model, and display name for the system prompt
@@ -98,14 +111,28 @@ export async function POST(request: Request) {
 
   const model = profile.openrouter_model ?? "x-ai/grok-4.1-fast";
 
-  // Decrypt the stored summary, if present. A corrupt summary is non-fatal —
-  // treat as absent and continue. The next successful summarization will overwrite it.
+  // Resolve the companion display name from shared metadata.
+  // Used as the speaker label in summarization transcripts.
+  const companionName =
+    getBratBySlug(sessionRow.brat_slug as string)?.name ?? "Aria";
+
+  // Decrypt the stored summary, if present.
+  //
+  // On failure: treat the summary AND its watermark as unusable for this
+  // request. Zeroing lastSummarizedCount ensures that context-building falls
+  // back to the full HISTORY_CONTEXT_LIMIT and that any subsequent
+  // summarization rebuilds from scratch rather than passing a stale offset to
+  // getMessagesToSummarize, which would silently skip the messages the corrupt
+  // summary was supposed to cover.
   let historySummary: string | null = null;
+  let lastSummarizedCount = (sessionRow.last_summarized_message_count as number | null) ?? 0;
+
   if (sessionRow.history_summary) {
     try {
       historySummary = decryptMessage(sessionRow.history_summary as string);
     } catch {
-      console.error("[brat.gg] Failed to decrypt session summary — treating as absent");
+      lastSummarizedCount = 0;
+      console.error("[brat.gg] Failed to decrypt session summary — resetting watermark for this request");
     }
   }
 
@@ -133,8 +160,6 @@ export async function POST(request: Request) {
   // live context window since the last summary. If summarization fails the
   // chat request continues normally — historySummary retains its previous
   // value (or null), and the model receives the full trimmed history instead.
-  const lastSummarizedCount = (sessionRow.last_summarized_message_count as number | null) ?? 0;
-
   if (shouldRefreshSummary(chatMessages.length, lastSummarizedCount)) {
     try {
       const newMessages = getMessagesToSummarize(chatMessages, lastSummarizedCount);
@@ -144,9 +169,17 @@ export async function POST(request: Request) {
           historySummary,
           decryptedApiKey,
           model,
-          process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+          process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+          companionName
         );
-        await supabase
+        // Only promote the new summary in-memory if the DB write succeeds.
+        // If the write fails (RLS error, missing column, transient DB error),
+        // historySummary stays at its previous value so the watermark stored in
+        // last_summarized_message_count remains consistent with the actual
+        // persisted summary. Without this check, in-memory state diverges from
+        // DB state and future requests re-summarize the same messages or lose
+        // continuity.
+        const { error: updateError } = await supabase
           .from("chat_sessions")
           .update({
             history_summary: encryptMessage(newSummary),
@@ -154,7 +187,18 @@ export async function POST(request: Request) {
             last_summarized_message_count: chatMessages.length,
           })
           .eq("id", sessionId);
-        historySummary = newSummary;
+        if (updateError) {
+          console.error("[brat.gg] Failed to persist conversation summary:", updateError.message);
+        } else {
+          historySummary = newSummary;
+          // Advance the in-memory watermark to match what was just written to DB.
+          // Without this, the context builder below computes the watermark from
+          // the stale pre-refresh count and re-sends messages that are already
+          // covered by the new summary. In the corrupt-summary recovery path
+          // (where lastSummarizedCount was reset to 0) this is especially bad:
+          // the full chat history would be sent as raw context on this request.
+          lastSummarizedCount = chatMessages.length;
+        }
       }
     } catch (err) {
       console.error("[brat.gg] Conversation summary refresh failed, continuing without update:", err);
@@ -162,7 +206,7 @@ export async function POST(request: Request) {
   }
   // ─────────────────────────────────────────────────────────────────────────
 
-  const systemPrompt = buildAriaSystemPrompt({
+  const systemPrompt = buildSystemPrompt({
     userName: profile.display_name ?? null,
     currentDate: new Date().toLocaleDateString("en-US", {
       weekday: "long",
@@ -173,11 +217,27 @@ export async function POST(request: Request) {
     historySummary,
   });
 
-  // When a summary is available, only the most recent LIVE_WINDOW messages are
-  // sent as raw context — older context is covered by the injected summary.
-  // Without a summary, fall back to the full HISTORY_CONTEXT_LIMIT.
-  const contextLimit = historySummary ? LIVE_WINDOW : HISTORY_CONTEXT_LIMIT;
-  const contextMessages = trimHistory(chatMessages, contextLimit);
+  // Build the raw context window sent alongside the system prompt.
+  //
+  // When a summary exists:
+  //   The summary covers messages[0 .. (lastSummarizedCount - LIVE_WINDOW) - 1].
+  //   Raw context must start at the watermark index (lastSummarizedCount - LIVE_WINDOW)
+  //   so that no message falls between the summary and the live window.
+  //   Between refreshes the raw window grows by at most SUMMARY_TRIGGER_DELTA
+  //   messages before the next refresh collapses it back to ~LIVE_WINDOW.
+  //
+  // When no summary exists:
+  //   Fall back to the full HISTORY_CONTEXT_LIMIT.
+  let contextMessages: { role: string; content: string }[];
+  if (historySummary) {
+    const watermark = Math.max(0, lastSummarizedCount - LIVE_WINDOW);
+    const sliced = chatMessages.slice(watermark);
+    // Ensure the window starts on a user turn (same invariant as trimHistory).
+    const firstUser = sliced.findIndex((m) => m.role === "user");
+    contextMessages = firstUser > 0 ? sliced.slice(firstUser) : sliced;
+  } else {
+    contextMessages = trimHistory(chatMessages, HISTORY_CONTEXT_LIMIT);
+  }
 
   // Stream from OpenRouter
   const orResponse = await fetch(OPENROUTER_API_URL, {

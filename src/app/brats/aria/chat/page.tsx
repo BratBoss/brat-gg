@@ -1,10 +1,14 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { decryptMessage } from "@/lib/crypto";
+import { getBratBySlug } from "@/content/brats";
 import ChatClient from "@/components/chat/ChatClient";
 
+// Single registry reference — all brat-specific strings come from here.
+const BRAT = getBratBySlug("aria")!;
+
 export const metadata = {
-  title: "Chat — Aria | brat.gg",
+  title: `Chat — ${BRAT.name} | brat.gg`,
 };
 
 export default async function ChatPage() {
@@ -14,7 +18,7 @@ export default async function ChatPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login?next=/brats/aria/chat");
+    redirect(`/login?next=/brats/${BRAT.slug}/chat`);
   }
 
   // Run in parallel: profile data (no key blob) + key existence check.
@@ -41,7 +45,7 @@ export default async function ChatPage() {
     avatarDisplayUrl = signed?.signedUrl ?? null;
   }
 
-  const session = await getOrCreateSession(supabase, user.id, "aria");
+  const session = await getOrCreateSession(supabase, user.id, BRAT.slug);
 
   const { data: rawMessages } = await supabase
     .from("messages")
@@ -63,6 +67,12 @@ export default async function ChatPage() {
         avatarUrl: avatarDisplayUrl,
         hasApiKey: (keyCount ?? 0) > 0,
         model: profile?.openrouter_model ?? "x-ai/grok-4.1-fast",
+      }}
+      brat={{
+        name: BRAT.name,
+        portrait: BRAT.portrait,
+        section: BRAT.section,
+        settingsHref: `/brats/${BRAT.slug}/settings`,
       }}
     />
   );
