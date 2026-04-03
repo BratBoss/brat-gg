@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { decryptSecret, encryptMessage, decryptMessage, ConfigError } from "@/lib/crypto";
 import { buildAriaSystemPrompt } from "@/content/aria/buildSystemPrompt";
+import { getBratBySlug } from "@/content/brats";
 import {
   shouldRefreshSummary,
   getMessagesToSummarize,
@@ -98,21 +99,28 @@ export async function POST(request: Request) {
 
   const model = profile.openrouter_model ?? "x-ai/grok-4.1-fast";
 
-  // Derive the companion's display name from the brat slug (e.g. "aria" → "Aria").
-  // Used as the speaker label in summarization transcripts so the helper stays
-  // companion-agnostic.
+  // Resolve the companion display name from shared metadata.
+  // Used as the speaker label in summarization transcripts.
   const companionName =
-    (sessionRow.brat_slug as string | null)
-      ?.replace(/^./, (c) => c.toUpperCase()) ?? "Aria";
+    getBratBySlug(sessionRow.brat_slug as string)?.name ?? "Aria";
 
-  // Decrypt the stored summary, if present. A corrupt summary is non-fatal —
-  // treat as absent and continue. The next successful summarization will overwrite it.
+  // Decrypt the stored summary, if present.
+  //
+  // On failure: treat the summary AND its watermark as unusable for this
+  // request. Zeroing lastSummarizedCount ensures that context-building falls
+  // back to the full HISTORY_CONTEXT_LIMIT and that any subsequent
+  // summarization rebuilds from scratch rather than passing a stale offset to
+  // getMessagesToSummarize, which would silently skip the messages the corrupt
+  // summary was supposed to cover.
   let historySummary: string | null = null;
+  let lastSummarizedCount = (sessionRow.last_summarized_message_count as number | null) ?? 0;
+
   if (sessionRow.history_summary) {
     try {
       historySummary = decryptMessage(sessionRow.history_summary as string);
     } catch {
-      console.error("[brat.gg] Failed to decrypt session summary — treating as absent");
+      lastSummarizedCount = 0;
+      console.error("[brat.gg] Failed to decrypt session summary — resetting watermark for this request");
     }
   }
 
@@ -140,8 +148,6 @@ export async function POST(request: Request) {
   // live context window since the last summary. If summarization fails the
   // chat request continues normally — historySummary retains its previous
   // value (or null), and the model receives the full trimmed history instead.
-  const lastSummarizedCount = (sessionRow.last_summarized_message_count as number | null) ?? 0;
-
   if (shouldRefreshSummary(chatMessages.length, lastSummarizedCount)) {
     try {
       const newMessages = getMessagesToSummarize(chatMessages, lastSummarizedCount);
