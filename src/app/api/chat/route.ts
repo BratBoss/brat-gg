@@ -1,14 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { decryptSecret, encryptMessage, decryptMessage, ConfigError } from "@/lib/crypto";
 import { buildAriaSystemPrompt } from "@/content/aria/buildSystemPrompt";
+import {
+  shouldRefreshSummary,
+  getMessagesToSummarize,
+  generateSummary,
+  LIVE_WINDOW,
+} from "@/lib/summarize";
 import { NextResponse } from "next/server";
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// Maximum number of messages sent to OpenRouter per request.
-// Full history is always retained in the database; only the context window sent
-// to the model is trimmed. When conversation summarization is implemented, lower
-// this limit and inject the summary via buildAriaSystemPrompt({ historySummary }).
+// Fallback context limit used when no summary exists yet.
+// Once a summary is in place the live window (LIVE_WINDOW = 20) is used instead,
+// since older context is covered by the injected summary.
 const HISTORY_CONTEXT_LIMIT = 50;
 
 function trimHistory(
@@ -42,15 +47,16 @@ export async function POST(request: Request) {
 
   const { sessionId, message } = body as { sessionId: string; message: string };
 
-  // Verify session belongs to this user (RLS also enforces this, belt-and-suspenders)
-  const { data: session } = await supabase
+  // Verify session belongs to this user (RLS also enforces this, belt-and-suspenders).
+  // Also load summary fields here to avoid a second round-trip.
+  const { data: sessionRow } = await supabase
     .from("chat_sessions")
-    .select("id")
+    .select("id, history_summary, last_summarized_message_count")
     .eq("id", sessionId)
     .eq("user_id", user.id)
     .single();
 
-  if (!session) {
+  if (!sessionRow) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }
 
@@ -92,16 +98,16 @@ export async function POST(request: Request) {
 
   const model = profile.openrouter_model ?? "x-ai/grok-4.1-fast";
 
-  const systemPrompt = buildAriaSystemPrompt({
-    userName: profile.display_name ?? null,
-    currentDate: new Date().toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
-    // historySummary not wired in v1 — memory design deferred
-  });
+  // Decrypt the stored summary, if present. A corrupt summary is non-fatal —
+  // treat as absent and continue. The next successful summarization will overwrite it.
+  let historySummary: string | null = null;
+  if (sessionRow.history_summary) {
+    try {
+      historySummary = decryptMessage(sessionRow.history_summary as string);
+    } catch {
+      console.error("[brat.gg] Failed to decrypt session summary — treating as absent");
+    }
+  }
 
   // Persist user message (encrypted at rest)
   await supabase.from("messages").insert({
@@ -110,7 +116,7 @@ export async function POST(request: Request) {
     content: encryptMessage(message),
   });
 
-  // Load conversation history for context
+  // Load full conversation history for context (includes the message just persisted)
   const { data: history } = await supabase
     .from("messages")
     .select("role, content")
@@ -122,9 +128,56 @@ export async function POST(request: Request) {
     content: decryptMessage(m.content),
   }));
 
-  // Trim to the most recent HISTORY_CONTEXT_LIMIT messages before sending to
-  // OpenRouter. Full history is kept in the database and visible in the UI.
-  const contextMessages = trimHistory(chatMessages, HISTORY_CONTEXT_LIMIT);
+  // ── Conversation summary refresh ─────────────────────────────────────────
+  // Triggered at request time when enough new messages have aged out of the
+  // live context window since the last summary. If summarization fails the
+  // chat request continues normally — historySummary retains its previous
+  // value (or null), and the model receives the full trimmed history instead.
+  const lastSummarizedCount = (sessionRow.last_summarized_message_count as number | null) ?? 0;
+
+  if (shouldRefreshSummary(chatMessages.length, lastSummarizedCount)) {
+    try {
+      const newMessages = getMessagesToSummarize(chatMessages, lastSummarizedCount);
+      if (newMessages.length > 0) {
+        const newSummary = await generateSummary(
+          newMessages,
+          historySummary,
+          decryptedApiKey,
+          model,
+          process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+        );
+        await supabase
+          .from("chat_sessions")
+          .update({
+            history_summary: encryptMessage(newSummary),
+            summary_updated_at: new Date().toISOString(),
+            last_summarized_message_count: chatMessages.length,
+          })
+          .eq("id", sessionId);
+        historySummary = newSummary;
+      }
+    } catch (err) {
+      console.error("[brat.gg] Conversation summary refresh failed, continuing without update:", err);
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const systemPrompt = buildAriaSystemPrompt({
+    userName: profile.display_name ?? null,
+    currentDate: new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    historySummary,
+  });
+
+  // When a summary is available, only the most recent LIVE_WINDOW messages are
+  // sent as raw context — older context is covered by the injected summary.
+  // Without a summary, fall back to the full HISTORY_CONTEXT_LIMIT.
+  const contextLimit = historySummary ? LIVE_WINDOW : HISTORY_CONTEXT_LIMIT;
+  const contextMessages = trimHistory(chatMessages, contextLimit);
 
   // Stream from OpenRouter
   const orResponse = await fetch(OPENROUTER_API_URL, {
