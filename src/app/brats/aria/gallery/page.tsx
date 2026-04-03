@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export const metadata = {
   title: "Gallery — Aria | brat.gg",
 };
@@ -23,7 +21,7 @@ export default function GalleryPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {galleryImages.map((img, i) => (
-          <Link
+          <a
             key={i}
             href={img.src}
             target="_blank"
@@ -36,7 +34,7 @@ export default function GalleryPage() {
               alt={img.alt}
               className="w-full h-auto block transition-transform duration-300 group-hover:scale-[1.01]"
             />
-          </Link>
+          </a>
         ))}
       </div>
     </main>
