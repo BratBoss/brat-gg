@@ -6,7 +6,7 @@ V1 ships one companion: Aria.
 
 ---
 
-## V1 product scope
+## Current scope
 
 **In scope:**
 - Magic-link auth (passwordless, email + OAuth GitHub via Supabase)
@@ -39,7 +39,7 @@ V1 ships one companion: Aria.
 
 ---
 
-## Local development
+## Quick start
 
 ### Prerequisites
 
@@ -65,8 +65,6 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-**Local auth note:** Magic-link testing only works when Supabase Auth site/redirect URLs match the environment you are using. If `NEXT_PUBLIC_APP_URL` points at localhost but Supabase is configured only for production, the email link may return to the production site instead of local dev.
-
 ### Build check
 
 ```bash
@@ -75,9 +73,7 @@ npm run build
 
 The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `MESSAGE_ENCRYPTION_KEY` and `ENCRYPTION_SECRET` — this is distinct from the build step.
 
----
-
-## Environment variables
+### Environment variables
 
 | Variable | Required | Description |
 |---|---|---|
@@ -89,9 +85,7 @@ The build runs TypeScript type-checking. A separate runtime-startup check in `sr
 
 `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_KEY` have no fallback. A missing or malformed value causes the server to abort at runtime startup — `src/instrumentation.ts` validates it before the first request is served. The build itself does not fail on this; the failure happens when the server process initialises.
 
----
-
-## Supabase setup
+### Supabase setup
 
 1. Create a new Supabase project.
 2. Run `supabase/migrations/001_initial_schema.sql` in the Supabase SQL editor. This creates:
@@ -109,7 +103,9 @@ The build runs TypeScript type-checking. A separate runtime-startup check in `sr
 
 ---
 
-## Auth flow
+## Authentication
+
+### Auth flow
 
 **Magic link:**
 1. User submits email on `/login`.
@@ -127,13 +123,11 @@ The build runs TypeScript type-checking. A separate runtime-startup check in `sr
 
 A `?next=` query param on `/login` is preserved through both flows — it is forwarded to `/auth/callback` via the `redirectTo` URL and then used as the post-login destination.
 
----
-
-## OAuth provider setup
+### OAuth provider setup
 
 The `/auth/callback` route already handles OAuth — no extra route is needed. To enable a provider:
 
-### GitHub
+#### GitHub
 
 1. Go to [github.com/settings/developers](https://github.com/settings/developers) → **OAuth Apps** → **New OAuth App**.
 2. Set **Homepage URL** to your app URL (e.g. `https://brat.gg`).
@@ -149,74 +143,17 @@ The `/auth/callback` route already handles OAuth — no extra route is needed. T
 
 **Adding more providers:** Add an entry to the `OAUTH_PROVIDERS` array in `src/app/login/page.tsx`. The provider string must match a Supabase-supported provider name (e.g. `"discord"`, `"twitter"`).
 
----
+### Local auth note
 
-### How keys are stored
-
-- User submits their key via `POST /api/settings`.
-- The server encrypts it with AES-256-GCM (`src/lib/crypto.ts`) before writing to `profiles.openrouter_api_key`.
-- The encrypted blob is stored as `iv:authTag:ciphertext` (all hex).
-- The plaintext key is never logged or returned to the client.
-
-### How message history is stored
-
-- User and assistant message content is encrypted at rest with `MESSAGE_ENCRYPTION_KEY` before being written to `messages.content`.
-- Message history is decrypted server-side when loading chat history for the UI and when building the context sent to OpenRouter.
-- Existing legacy plaintext rows remain readable for compatibility; new writes are encrypted. No automatic backfill is performed in this pass.
-
-### Key existence vs. key value
-
-Pages that only need to know *whether* a key exists use a HEAD-only count query instead of selecting the encrypted blob. This prevents the encrypted value from being serialized into server component output unnecessarily.
-
-```typescript
-// Correct — no key blob in response
-supabase.from("profiles")
-  .select("*", { count: "exact", head: true })
-  .eq("id", user.id)
-  .not("openrouter_api_key", "is", null)
-```
+Magic-link testing only works when Supabase Auth site/redirect URLs match the environment you are using. If `NEXT_PUBLIC_APP_URL` points at localhost but Supabase is configured only for production, the email link may return to the production site instead of local dev.
 
 ---
 
-## Chat flow
+## Architecture
 
-```
-Browser (ChatClient)
-  → POST /api/chat { sessionId, message }
-      → auth check (Supabase)
-      → verify session belongs to user
-      → load encrypted API key from profiles
-      → decrypt key (AES-256-GCM)
-      → resolve prompt builder by brat_slug (400 if unsupported companion)
-      → persist user message to messages table (encrypted at rest)
-      → load conversation history and decrypt server-side
-      → refresh conversation summary if threshold reached (blocking, before model call)
-      → build system prompt via resolved builder (reads companion's system-prompt.md, injects user name + date + summary)
-      → build context window: all unsummarized messages (from watermark to end) when summary exists, else trim to 50
-      → POST to OpenRouter (stream: true)
-      → pipe SSE stream back to browser
-      → after stream ends: persist assistant message to messages table (encrypted at rest)
-  ← SSE stream (text/event-stream)
-Browser
-  → parses SSE chunks (data: {...})
-  → accumulates content into streaming state
-  → on [DONE]: commits assistant message to local state
-```
+### Project structure (high level)
 
-**System prompt source of truth:** Each companion's `system-prompt.md` lives under `src/content/{slug}/`. Edit that file to change the companion's behavior. `buildSystemPrompt.ts` in the same directory reads it at module load, strips the documentation header (everything before the first `---`), and injects template variables. Do not duplicate the prompt text in `buildSystemPrompt.ts`.
-
-**Prompt resolution:** `src/content/brats/getSystemPrompt.ts` maps brat slugs to their builder functions. The chat route resolves the builder from `chat_sessions.brat_slug`. Adding a new companion requires a prompt file, a builder, and one registry entry in that file.
-
-**Template variables in `system-prompt.md`:**
-- `{{USER_NAME}}` — user's display name, or "someone who hasn't shared their name yet"
-- `{{CURRENT_DATE}}` — formatted date, injected at request time
-- `{{HISTORY_SUMMARY}}` — per-session encrypted summary of older messages; injected when present, removed cleanly when absent
-
----
-
-## Project structure (high level)
-
-```
+```text
 src/
 ├── proxy.ts                        # Session cookie refresh (Next.js middleware)
 ├── instrumentation.ts              # Startup: validates ENCRYPTION_SECRET and MESSAGE_ENCRYPTION_KEY
@@ -265,6 +202,71 @@ supabase/
 └── migrations/
     ├── 001_initial_schema.sql      # Full schema: tables, RLS, storage, trigger
     └── 002_conversation_summary.sql  # Adds summary columns to chat_sessions
+```
+
+### Chat flow
+
+```text
+Browser (ChatClient)
+  → POST /api/chat { sessionId, message }
+      → auth check (Supabase)
+      → verify session belongs to user
+      → load encrypted API key from profiles
+      → decrypt key (AES-256-GCM)
+      → resolve prompt builder by brat_slug (400 if unsupported companion)
+      → persist user message to messages table (encrypted at rest)
+      → load conversation history and decrypt server-side
+      → refresh conversation summary if threshold reached (blocking, before model call)
+      → build system prompt via resolved builder (reads companion's system-prompt.md, injects user name + date + summary)
+      → build context window: all unsummarized messages (from watermark to end) when summary exists, else trim to 50
+      → POST to OpenRouter (stream: true)
+      → pipe SSE stream back to browser
+      → after stream ends: persist assistant message to messages table (encrypted at rest)
+  ← SSE stream (text/event-stream)
+Browser
+  → parses SSE chunks (data: {...})
+  → accumulates content into streaming state
+  → on [DONE]: commits assistant message to local state
+```
+
+### Prompt resolution
+
+**System prompt source of truth:** Each companion's `system-prompt.md` lives under `src/content/{slug}/`. Edit that file to change the companion's behavior. `buildSystemPrompt.ts` in the same directory reads it at module load, strips the documentation header (everything before the first `---`), and injects template variables. Do not duplicate the prompt text in `buildSystemPrompt.ts`.
+
+**Prompt resolution:** `src/content/brats/getSystemPrompt.ts` maps brat slugs to their builder functions. The chat route resolves the builder from `chat_sessions.brat_slug`. Adding a new companion requires a prompt file, a builder, and one registry entry in that file.
+
+**Template variables in `system-prompt.md`:**
+- `{{USER_NAME}}` — user's display name, or "someone who hasn't shared their name yet"
+- `{{CURRENT_DATE}}` — formatted date, injected at request time
+- `{{HISTORY_SUMMARY}}` — per-session encrypted summary of older messages; injected when present, removed cleanly when absent
+
+---
+
+## Data and security model
+
+### How keys are stored
+
+- User submits their key via `POST /api/settings`.
+- The server encrypts it with AES-256-GCM (`src/lib/crypto.ts`) before writing to `profiles.openrouter_api_key`.
+- The encrypted blob is stored as `iv:authTag:ciphertext` (all hex).
+- The plaintext key is never logged or returned to the client.
+
+### How message history is stored
+
+- User and assistant message content is encrypted at rest with `MESSAGE_ENCRYPTION_KEY` before being written to `messages.content`.
+- Message history is decrypted server-side when loading chat history for the UI and when building the context sent to OpenRouter.
+- Existing legacy plaintext rows remain readable for compatibility; new writes are encrypted. No automatic backfill is performed in this pass.
+
+### Key existence vs. key value
+
+Pages that only need to know *whether* a key exists use a HEAD-only count query instead of selecting the encrypted blob. This prevents the encrypted value from being serialized into server component output unnecessarily.
+
+```typescript
+// Correct — no key blob in response
+supabase.from("profiles")
+  .select("*", { count: "exact", head: true })
+  .eq("id", user.id)
+  .not("openrouter_api_key", "is", null)
 ```
 
 ---
@@ -316,7 +318,7 @@ Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_K
 
 ---
 
-## Deferred / future work (Listed top to bottom most important to least)
+## Deferred / future work
 
 | Feature | Notes |
 |---|---|
