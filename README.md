@@ -162,7 +162,7 @@ Browser (ChatClient)
       → load conversation history and decrypt server-side
       → refresh conversation summary if threshold reached (blocking, before model call)
       → inject summary into system prompt via buildAriaSystemPrompt({ historySummary })
-      → trim history to live window (20 msgs w/ summary, 50 msgs without)
+      → build context window: all unsummarized messages (from watermark to end) when summary exists, else trim to 50
       → POST to OpenRouter (stream: true)
       → pipe SSE stream back to browser
       → after stream ends: persist assistant message to messages table (encrypted at rest)

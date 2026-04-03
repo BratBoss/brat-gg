@@ -79,6 +79,9 @@ export function getMessagesToSummarize(
  * alongside it and the model rewrites the combined memory as a single artifact.
  * If no previousSummary, the new messages are summarized from scratch.
  *
+ * companionName is the display name for the assistant speaker in the transcript
+ * (e.g. "Aria"). Pass it explicitly so this helper stays companion-agnostic.
+ *
  * Throws on failure — callers must catch and fall back gracefully.
  * A failed summary must never block the user's chat request.
  */
@@ -87,10 +90,11 @@ export async function generateSummary(
   previousSummary: string | null,
   apiKey: string,
   model: string,
-  appUrl: string
+  appUrl: string,
+  companionName: string
 ): Promise<string> {
   const conversationText = newMessages
-    .map((m) => `${m.role === "user" ? "User" : "Aria"}: ${m.content}`)
+    .map((m) => `${m.role === "user" ? "User" : companionName}: ${m.content}`)
     .join("\n\n");
 
   const userContent = previousSummary?.trim()

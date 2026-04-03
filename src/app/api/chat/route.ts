@@ -48,10 +48,10 @@ export async function POST(request: Request) {
   const { sessionId, message } = body as { sessionId: string; message: string };
 
   // Verify session belongs to this user (RLS also enforces this, belt-and-suspenders).
-  // Also load summary fields here to avoid a second round-trip.
+  // Also load summary fields and brat_slug here to avoid a second round-trip.
   const { data: sessionRow } = await supabase
     .from("chat_sessions")
-    .select("id, history_summary, last_summarized_message_count")
+    .select("id, brat_slug, history_summary, last_summarized_message_count")
     .eq("id", sessionId)
     .eq("user_id", user.id)
     .single();
@@ -97,6 +97,13 @@ export async function POST(request: Request) {
   }
 
   const model = profile.openrouter_model ?? "x-ai/grok-4.1-fast";
+
+  // Derive the companion's display name from the brat slug (e.g. "aria" → "Aria").
+  // Used as the speaker label in summarization transcripts so the helper stays
+  // companion-agnostic.
+  const companionName =
+    (sessionRow.brat_slug as string | null)
+      ?.replace(/^./, (c) => c.toUpperCase()) ?? "Aria";
 
   // Decrypt the stored summary, if present. A corrupt summary is non-fatal —
   // treat as absent and continue. The next successful summarization will overwrite it.
@@ -144,9 +151,17 @@ export async function POST(request: Request) {
           historySummary,
           decryptedApiKey,
           model,
-          process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+          process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+          companionName
         );
-        await supabase
+        // Only promote the new summary in-memory if the DB write succeeds.
+        // If the write fails (RLS error, missing column, transient DB error),
+        // historySummary stays at its previous value so the watermark stored in
+        // last_summarized_message_count remains consistent with the actual
+        // persisted summary. Without this check, in-memory state diverges from
+        // DB state and future requests re-summarize the same messages or lose
+        // continuity.
+        const { error: updateError } = await supabase
           .from("chat_sessions")
           .update({
             history_summary: encryptMessage(newSummary),
@@ -154,7 +169,11 @@ export async function POST(request: Request) {
             last_summarized_message_count: chatMessages.length,
           })
           .eq("id", sessionId);
-        historySummary = newSummary;
+        if (updateError) {
+          console.error("[brat.gg] Failed to persist conversation summary:", updateError.message);
+        } else {
+          historySummary = newSummary;
+        }
       }
     } catch (err) {
       console.error("[brat.gg] Conversation summary refresh failed, continuing without update:", err);
@@ -173,11 +192,27 @@ export async function POST(request: Request) {
     historySummary,
   });
 
-  // When a summary is available, only the most recent LIVE_WINDOW messages are
-  // sent as raw context — older context is covered by the injected summary.
-  // Without a summary, fall back to the full HISTORY_CONTEXT_LIMIT.
-  const contextLimit = historySummary ? LIVE_WINDOW : HISTORY_CONTEXT_LIMIT;
-  const contextMessages = trimHistory(chatMessages, contextLimit);
+  // Build the raw context window sent alongside the system prompt.
+  //
+  // When a summary exists:
+  //   The summary covers messages[0 .. (lastSummarizedCount - LIVE_WINDOW) - 1].
+  //   Raw context must start at the watermark index (lastSummarizedCount - LIVE_WINDOW)
+  //   so that no message falls between the summary and the live window.
+  //   Between refreshes the raw window grows by at most SUMMARY_TRIGGER_DELTA
+  //   messages before the next refresh collapses it back to ~LIVE_WINDOW.
+  //
+  // When no summary exists:
+  //   Fall back to the full HISTORY_CONTEXT_LIMIT.
+  let contextMessages: { role: string; content: string }[];
+  if (historySummary) {
+    const watermark = Math.max(0, lastSummarizedCount - LIVE_WINDOW);
+    const sliced = chatMessages.slice(watermark);
+    // Ensure the window starts on a user turn (same invariant as trimHistory).
+    const firstUser = sliced.findIndex((m) => m.role === "user");
+    contextMessages = firstUser > 0 ? sliced.slice(firstUser) : sliced;
+  } else {
+    contextMessages = trimHistory(chatMessages, HISTORY_CONTEXT_LIMIT);
+  }
 
   // Stream from OpenRouter
   const orResponse = await fetch(OPENROUTER_API_URL, {
