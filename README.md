@@ -17,10 +17,10 @@ V1 ships one companion: Aria.
 - Aria's journal and gallery pages (static content)
 
 **Out of scope / deferred:**
-- Conversation summarization / long-term memory
 - Multiple active chat sessions per user
-- OAuth providers (GitHub, Google, etc.)
 - Additional companions (Marcy, Sylvie)
+- OAuth providers (GitHub, Google, etc.)
+- Conversation summarization / long-term memory
 - CORS
 
 ---
@@ -47,7 +47,7 @@ V1 ships one companion: Aria.
 
 - Node.js 20+
 - A Supabase project (free tier works)
-- An OpenRouter account (for testing chat; each user provides their own key)
+- An OpenRouter account (for testing chat)
 
 ### Setup
 
@@ -73,7 +73,7 @@ Open `http://localhost:3000`.
 npm run build
 ```
 
-The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `MESSAGE_ENCRYPTION_KEY` and `ENCRYPTION_SECRET` — this is distinct from the build step (see BYOK section).
+The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `MESSAGE_ENCRYPTION_KEY` and `ENCRYPTION_SECRET` — this is distinct from the build step
 
 ---
 
@@ -119,10 +119,6 @@ The build runs TypeScript type-checking. A separate runtime-startup check in `sr
 There are no passwords and no OAuth providers in V1.
 
 ---
-
-## BYOK model and key security
-
-brat.gg does not use any shared or site-managed OpenRouter key. Every user provides their own key, which is stored encrypted at rest and used only for that user's requests. This is a product constraint, not a cost-saving measure — do not add a site-managed fallback key.
 
 ### How keys are stored
 
@@ -270,7 +266,8 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_APP_URL` (production domain, e.g. `https://brat.gg`)
    - `ENCRYPTION_SECRET` (generate a fresh value for production)
-3. Deploy. If `ENCRYPTION_SECRET` is missing or malformed, the server will abort at runtime startup (not at build time) — this is the intended behavior.
+   - `MESSAGE_ENCRYPTION_KEY` (generate a fresh value for production)
+3. Deploy. If `ENCRYPTION_SECRET` or `MESSAGE_ENCRYPTION_KEY` is missing or malformed, the server will abort at runtime startup (not at build time) — this is the intended behavior.
 
 **`outputFileTracingIncludes`:** `next.config.ts` includes `src/content/aria/system-prompt.md` in the `/api/chat` serverless bundle. Without this, the file is absent from the Vercel lambda and the chat route throws at runtime. This key is at the top level of the Next.js config object (not under `experimental` — that location was removed in Next.js 16).
 
@@ -307,9 +304,19 @@ Not assigned
 
 | Feature | Notes |
 |---|---|
-| Long-context handling | No message trimming. Long conversations will hit model context limits. |
 | Multiple chat sessions per user | Currently one session per user per brat (latest wins). No UI for session history. |
 | Additional companions | Placeholder assets for Marcy and Sylvie exist in `public/images/brats/`. No routes, content, or sessions. |
 | OAuth login | Only magic link in V1. Supabase supports OAuth providers with minimal changes when needed. |
 | Conversation summarization / memory | `{{HISTORY_SUMMARY}}` variable is wired in the prompt template but not populated. Intentionally deferred — no design for the summarization trigger or storage yet. |
 | CORS | Security improvement |
+
+Favicons:
+
+app/favicon.ico → multi-size ICO (16, 32, 48)
+app/icon.png → 512 × 512
+app/apple-icon.png → 180 × 180
+public/safari-pinned-tab.svg → black SVG, transparent bg
+public/icon-192.png → 192 × 192
+public/icon-512.png → 512 × 512
+public/icon-192-maskable.png → 192 × 192
+public/icon-512-maskable.png → 512 × 512
