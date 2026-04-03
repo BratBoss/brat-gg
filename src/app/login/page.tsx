@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -36,9 +37,12 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-10 text-center">
-          <span className="text-[#8aaa8c] text-sm tracking-widest uppercase">
+          <Link
+            href="/"
+            className="text-[#8aaa8c] text-sm tracking-widest uppercase hover:text-[#d6e4d2] transition-colors"
+          >
             brat.gg
-          </span>
+          </Link>
         </div>
 
         {submitted ? (
