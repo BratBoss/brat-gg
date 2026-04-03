@@ -10,7 +10,7 @@ V1 ships one companion: Aria.
 
 **In scope:**
 - Magic-link auth (passwordless, email only)
-- Per-user chat with Aria, with full conversation history stored encrypted at rest
+- Per-user chat with Aria, with conversation history stored encrypted at rest
 - Streaming responses via OpenRouter (user-supplied API key)
 - User settings: display name, avatar, API key, model selection
 - Private avatar storage (Supabase Storage, signed URLs)
@@ -37,7 +37,7 @@ V1 ships one companion: Aria.
 | Hosting | Vercel | — |
 | Language | TypeScript | 6.0.2 |
 
-**Next.js 16 note:** This version has breaking changes. `middleware.ts` is now `proxy.ts` with a `proxy` export (not `middleware`). Several `experimental` config keys have moved to top-level. Read `node_modules/next/dist/docs/` before touching framework config.
+**Next.js 16 note:** This version has breaking changes. `middleware.ts` is now `proxy.ts` with a `proxy` export (not `middleware`). Several `experimental` config keys have moved to top-level. If you need to change framework config, check the local Next.js docs in `node_modules/next/dist/docs/` first.
 
 ---
 
@@ -67,13 +67,15 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+**Local auth note:** Magic-link testing only works when Supabase Auth site/redirect URLs match the environment you are using. If `NEXT_PUBLIC_APP_URL` points at localhost but Supabase is configured only for production, the email link may return to the production site instead of local dev.
+
 ### Build check
 
 ```bash
 npm run build
 ```
 
-The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `MESSAGE_ENCRYPTION_KEY` and `ENCRYPTION_SECRET` — this is distinct from the build step
+The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `MESSAGE_ENCRYPTION_KEY` and `ENCRYPTION_SECRET` — this is distinct from the build step.
 
 ---
 
@@ -131,7 +133,7 @@ There are no passwords and no OAuth providers in V1.
 
 - User and assistant message content is encrypted at rest with `MESSAGE_ENCRYPTION_KEY` before being written to `messages.content`.
 - Message history is decrypted server-side when loading chat history for the UI and when building the context sent to OpenRouter.
-- Existing legacy plaintext rows remain readable for compatibility; new writes are encrypted.
+- Existing legacy plaintext rows remain readable for compatibility; new writes are encrypted. No automatic backfill is performed in this pass.
 
 ### Key existence vs. key value
 
@@ -169,6 +171,7 @@ Browser (ChatClient)
       → build system prompt (reads system-prompt.md, injects user name + date)
       → persist user message to messages table (encrypted at rest)
       → load conversation history and decrypt server-side
+      → trim history to the recent-context limit
       → POST to OpenRouter (stream: true)
       → pipe SSE stream back to browser
       → after stream ends: persist assistant message to messages table (encrypted at rest)
@@ -188,7 +191,7 @@ Browser
 
 ---
 
-## Project structure
+## Project structure (high level)
 
 ```
 src/
@@ -270,13 +273,15 @@ This is required by `@supabase/ssr` to keep session cookies fresh. Removing or s
 ## Deployment (Vercel)
 
 1. Connect the repo to a Vercel project.
-2. Set all four environment variables in Vercel project settings:
+2. Set all five environment variables in Vercel project settings:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_APP_URL` (production domain, e.g. `https://brat.gg`)
    - `ENCRYPTION_SECRET` (generate a fresh value for production)
    - `MESSAGE_ENCRYPTION_KEY` (generate a fresh value for production)
 3. Deploy. If `ENCRYPTION_SECRET` or `MESSAGE_ENCRYPTION_KEY` is missing or malformed, the server will abort at runtime startup (not at build time) — this is the intended behavior.
+
+Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_KEY`; do not reuse the same secret for both.
 
 **`outputFileTracingIncludes`:** `next.config.ts` includes `src/content/aria/system-prompt.md` in the `/api/chat` serverless bundle. Without this, the file is absent from the Vercel lambda and the chat route throws at runtime. This key is at the top level of the Next.js config object (not under `experimental` — that location was removed in Next.js 16).
 
@@ -319,7 +324,7 @@ Not assigned
 | Conversation summarization / memory | `{{HISTORY_SUMMARY}}` variable is wired in the prompt template but not populated. Intentionally deferred — no design for the summarization trigger or storage yet. |
 | CORS | Security improvement |
 
-Favicons:
+## Favicons / app icons
 
 app/favicon.ico → multi-size ICO (16, 32, 48)
 app/icon.png → 512 × 512
