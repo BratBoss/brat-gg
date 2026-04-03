@@ -305,7 +305,6 @@ Not assigned
 
 | Feature | Notes |
 |---|---|
-| Encrypt Conversation History | Conversation history should be encrypted at rest. |
 | Long-context handling | No message trimming. Long conversations will hit model context limits. |
 | Multiple chat sessions per user | Currently one session per user per brat (latest wins). No UI for session history. |
 | Additional companions | Placeholder assets for Marcy and Sylvie exist in `public/images/brats/`. No routes, content, or sessions. |
