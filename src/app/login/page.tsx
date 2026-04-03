@@ -30,9 +30,14 @@ const OAUTH_PROVIDERS: { provider: Provider; label: string; icon: React.ReactNod
   },
 ];
 
+function isSafeNextPath(next: string): boolean {
+  return next.startsWith("/") && !next.startsWith("//") && !next.includes(":") && !next.includes("@");
+}
+
 function buildCallbackUrl(next: string) {
   const base = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`;
-  return next && next !== "/" ? `${base}?next=${encodeURIComponent(next)}` : base;
+  const safePath = isSafeNextPath(next) ? next : "/";
+  return safePath !== "/" ? `${base}?next=${encodeURIComponent(safePath)}` : base;
 }
 
 function LoginForm() {
