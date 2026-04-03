@@ -20,7 +20,8 @@ V1 ships one companion: Aria.
 - Conversation summarization / long-term memory
 - Multiple active chat sessions per user
 - OAuth providers (GitHub, Google, etc.)
-- Additional companions (Marcy, Sylvie — placeholder assets exist)
+- Additional companions (Marcy, Sylvie)
+- CORS
 
 ---
 
@@ -72,7 +73,7 @@ Open `http://localhost:3000`.
 npm run build
 ```
 
-The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `ENCRYPTION_SECRET` before the first request is served — this is distinct from the build step (see BYOK section).
+The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `MESSAGE_ENCRYPTION_KEY` and `ENCRYPTION_SECRET` — this is distinct from the build step (see BYOK section).
 
 ---
 
@@ -84,8 +85,9 @@ The build runs TypeScript type-checking. A separate runtime-startup check in `sr
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (labelled **Publishable key** in the Supabase dashboard) |
 | `NEXT_PUBLIC_APP_URL` | Yes | Base URL, e.g. `http://localhost:3000` or `https://brat.gg`. Used as the auth redirect origin. |
 | `ENCRYPTION_SECRET` | Yes | 64 hex characters (32 bytes). Encrypts user API keys at rest. Generate: `openssl rand -hex 32`. **Server-only. Never expose.** |
+| `MESSAGE_ENCRYPTION_KEY` | Yes | 64 hex characters (32 bytes). Encrypts user message history at rest. Generate: `openssl rand -hex 32`. **Server-only. Never expose.** |
 
-`ENCRYPTION_SECRET` has no fallback. A missing or malformed value causes the server to abort at runtime startup — `src/instrumentation.ts` validates it before the first request is served. The build itself does not fail on this; the failure happens when the server process initialises.
+`ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_KEY` have no fallback. A missing or malformed value causes the server to abort at runtime startup — `src/instrumentation.ts` validates it before the first request is served. The build itself does not fail on this; the failure happens when the server process initialises.
 
 ---
 
