@@ -41,7 +41,7 @@ export default function HomePage() {
                 key={brat.slug}
                 className="relative overflow-hidden rounded-lg border border-[#2a3a2c] bg-[#161d17] opacity-50 cursor-not-allowed"
               >
-                <BratCard brat={brat} comingSoon />
+                <BratCard brat={brat} />
               </div>
             )
           )}
@@ -53,10 +53,8 @@ export default function HomePage() {
 
 function BratCard({
   brat,
-  comingSoon = false,
 }: {
   brat: BratMeta;
-  comingSoon?: boolean;
 }) {
   return (
     <div className="flex flex-col">
@@ -68,13 +66,6 @@ function BratCard({
           alt={brat.name}
           className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
         />
-        {comingSoon && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#0f1410]/60">
-            <span className="text-[#4a5e4c] text-xs tracking-widest uppercase">
-              Coming soon
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Info */}
