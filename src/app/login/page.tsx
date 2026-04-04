@@ -28,6 +28,15 @@ function buildCallbackUrl(next: string) {
   return safePath !== "/" ? `${base}?next=${encodeURIComponent(safePath)}` : base;
 }
 
+function getBratThemeFromParams(searchParams: ReturnType<typeof useSearchParams>): string | undefined {
+  const explicitBrat = searchParams.get("brat")?.trim();
+  if (explicitBrat) return explicitBrat;
+
+  const next = searchParams.get("next") ?? "";
+  const match = next.match(/^\/brats\/([^/?#]+)/);
+  return match?.[1];
+}
+
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -151,9 +160,12 @@ function LoginForm() {
   );
 }
 
-export default function LoginPage() {
+function LoginPageInner() {
+  const searchParams = useSearchParams();
+  const bratTheme = getBratThemeFromParams(searchParams);
+
   return (
-    <main className="flex-1 flex flex-col items-center justify-center px-6 py-20">
+    <main className="flex-1 flex flex-col items-center justify-center px-6 py-20" data-brat={bratTheme}>
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="mb-10 text-center">
@@ -187,5 +199,42 @@ export default function LoginPage() {
         </Suspense>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex-1 flex flex-col items-center justify-center px-6 py-20">
+          <div className="w-full max-w-sm">
+            <div className="mb-10 text-center">
+              <Link
+                href="/"
+                className="text-[#8aaa8c] text-sm tracking-widest uppercase hover:text-[#d6e4d2] transition-colors"
+              >
+                brat.gg
+              </Link>
+            </div>
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-2xl font-light text-[#d6e4d2] mb-2 text-center">
+                  Sign in
+                </h1>
+                <p className="text-[#6b8a6e] text-sm text-center">
+                  Enter your email and we will send you a magic link.
+                </p>
+              </div>
+              <div className="flex flex-col gap-4">
+                <div className="h-11 rounded-md bg-[#161d17] border border-[#2a3a2c] animate-pulse" />
+                <div className="h-11 rounded-md bg-[#2a3a2c] animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </main>
+      }
+    >
+      <LoginPageInner />
+    </Suspense>
   );
 }

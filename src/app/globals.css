@@ -36,6 +36,20 @@ body {
   animation: cursor-blink 1s step-end infinite;
 }
 
+/* Homepage — neutral threshold theme between Aria and Marcy */
+[data-brat="home"] { background-color: #141110; }
+[data-brat="home"] .border-\[\#2a3a2c\] { border-color: #322824; }
+[data-brat="home"] .bg-\[\#161d17\]     { background-color: #1c1715; }
+[data-brat="home"] .bg-\[\#2a3a2c\]     { background-color: #322824; }
+[data-brat="home"] .bg-\[\#0f1410\]     { background-color: #141110; }
+[data-brat="home"] .hover\:bg-\[\#3a4e3c\]:hover { background-color: #433630; }
+[data-brat="home"] .hover\:border-\[\#5e7d5a\]:hover { border-color: #7f947d; }
+[data-brat="home"] .text-\[\#5e7d5a\]   { color: #a78f78; }
+[data-brat="home"] .text-\[\#4a5e4c\]   { color: #5c4d46; }
+[data-brat="home"] .text-\[\#6b8a6e\]   { color: #8c7a70; }
+[data-brat="home"] .text-\[\#8aaa8c\]   { color: #b7a69a; }
+[data-brat="home"] .text-\[\#d6e4d2\]   { color: #e6d8cf; }
+
 /* Marcy — warm dorm theme overrides */
 [data-brat="marcy"] { background-color: #241911; }
 [data-brat="marcy"] .border-\[\#2a3a2c\] { border-color: #4a3220; }
