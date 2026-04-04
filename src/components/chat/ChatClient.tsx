@@ -142,7 +142,26 @@ export default function ChatClient({
     setStreaming(true);
     setStreamingContent("");
 
+    // Client-side inactivity watchdog: if no new bytes arrive from the server
+    // for CLIENT_INACTIVITY_MS, abort the fetch so reader.read() throws and
+    // the finally block always runs — guaranteeing setStreaming(false) fires.
+    const fetchAbortController = new AbortController();
+    const CLIENT_INACTIVITY_MS = 45_000;
+    let clientInactivityTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function resetClientTimer() {
+      if (clientInactivityTimer) clearTimeout(clientInactivityTimer);
+      clientInactivityTimer = setTimeout(
+        () => fetchAbortController.abort(),
+        CLIENT_INACTIVITY_MS
+      );
+    }
+
+    let fullContent = "";
+
     try {
+      resetClientTimer();
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -150,6 +169,7 @@ export default function ChatClient({
           sessionId,
           message: content,
         }),
+        signal: fetchAbortController.signal,
       });
 
       if (!res.ok) {
@@ -161,12 +181,17 @@ export default function ChatClient({
       if (!reader) throw new Error("No response body");
 
       const decoder = new TextDecoder();
-      let fullContent = "";
       let lineBuffer = "";
+      // Tracks the SSE event type set by an `event:` field line. Persists
+      // across read() calls (chunks may split across field lines) and resets
+      // on blank lines (SSE message boundaries) per the SSE spec.
+      let pendingEventType = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+
+        resetClientTimer();
 
         const chunk = decoder.decode(value, { stream: true });
 
@@ -178,24 +203,42 @@ export default function ChatClient({
         lineBuffer = lines.pop() ?? "";
 
         for (const line of lines) {
+          if (line === "") {
+            pendingEventType = ""; // blank line = SSE message boundary
+            continue;
+          }
+          if (line.startsWith("event: ")) {
+            pendingEventType = line.slice(7).trim();
+            continue;
+          }
           if (line.startsWith("data: ")) {
             const data = line.slice(6).trimEnd();
             if (data === "[DONE]") continue;
+
+            // Parse first; skip lines with malformed JSON.
+            let json: ReturnType<typeof JSON.parse>;
             try {
-              const json = JSON.parse(data);
-              const delta = json.choices?.[0]?.delta?.content ?? "";
-              fullContent += delta;
-              setStreamingContent(fullContent);
+              json = JSON.parse(data);
             } catch {
-              // skip malformed chunks
+              continue;
             }
+
+            // The server emits `event: bratgg_error` when OpenRouter reports a
+            // mid-stream error or the inactivity watchdog fires server-side.
+            if (pendingEventType === "bratgg_error") {
+              throw new Error((json.message as string) ?? "Stream error — please try again.");
+            }
+
+            const delta = json.choices?.[0]?.delta?.content ?? "";
+            fullContent += delta;
+            setStreamingContent(fullContent);
           }
         }
       }
 
-      // P2 fix: flush any remaining buffered line after the read loop ends
-      // (mirrors the server-side fix — guards against a final SSE event that
-      // arrives without a trailing newline).
+      // Flush any remaining buffered line after the read loop ends
+      // (guards against a final SSE event that arrives without a trailing newline).
+      // bratgg_error events always end with \n\n so they won't appear here.
       if (lineBuffer.startsWith("data: ")) {
         const data = lineBuffer.slice(6).trimEnd();
         if (data && data !== "[DONE]") {
@@ -210,20 +253,34 @@ export default function ChatClient({
         }
       }
 
-      // Commit assistant message to state
-      const assistantMsg: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: fullContent,
-        created_at: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, assistantMsg]);
-      setStreamingContent("");
+      // Only commit if the stream delivered actual content. An empty fullContent
+      // means the stream closed without any tokens (e.g. mid-stream error that
+      // didn't produce a bratgg_error event, or an empty model response).
+      if (fullContent.trim()) {
+        const assistantMsg: Message = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: fullContent,
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+      } else {
+        throw new Error("No response received — please try again.");
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      const isAbort = err instanceof DOMException && err.name === "AbortError";
+      setError(
+        isAbort
+          ? "Request timed out — please try again."
+          : err instanceof Error
+          ? err.message
+          : "Something went wrong."
+      );
       // Remove the optimistic user message on failure
       setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
     } finally {
+      if (clientInactivityTimer) clearTimeout(clientInactivityTimer);
+      setStreamingContent("");
       setStreaming(false);
     }
   }

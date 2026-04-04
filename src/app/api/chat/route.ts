@@ -17,6 +17,11 @@ const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 // since older context is covered by the injected summary.
 const HISTORY_CONTEXT_LIMIT = 50;
 
+// How long to wait with no new bytes from OpenRouter before aborting.
+// Handles stalled connections where the TCP socket stays open but OpenRouter
+// stops sending — reader.read() would otherwise hang forever.
+const STREAM_INACTIVITY_MS = 30_000;
+
 function trimHistory(
   messages: { role: string; content: string }[],
   limit: number
@@ -239,7 +244,11 @@ export async function POST(request: Request) {
     contextMessages = trimHistory(chatMessages, HISTORY_CONTEXT_LIMIT);
   }
 
-  // Stream from OpenRouter
+  // Stream from OpenRouter.
+  // streamAbortController lets the inactivity watchdog kill a stalled
+  // connection so writer.close() always runs and the browser never hangs.
+  const streamAbortController = new AbortController();
+
   const orResponse = await fetch(OPENROUTER_API_URL, {
     method: "POST",
     headers: {
@@ -256,6 +265,7 @@ export async function POST(request: Request) {
       ],
       stream: true,
     }),
+    signal: streamAbortController.signal,
   });
 
   if (!orResponse.ok) {
@@ -276,11 +286,29 @@ export async function POST(request: Request) {
     let fullContent = "";
     let lineBuffer = "";
     const reader = orResponse.body!.getReader();
+    let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // Resets (or starts) the inactivity watchdog. Called once at the top of the
+    // read loop and again on every chunk received. If STREAM_INACTIVITY_MS
+    // elapses with no new bytes, the OpenRouter fetch is aborted — reader.read()
+    // throws an AbortError which is caught below, and writer.close() runs via
+    // the finally block so the browser exits the spinner.
+    function resetInactivityTimer() {
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(
+        () => streamAbortController.abort("stream-inactivity"),
+        STREAM_INACTIVITY_MS
+      );
+    }
 
     try {
+      resetInactivityTimer();
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+
+        resetInactivityTimer();
 
         const chunk = decoder.decode(value, { stream: true });
         await writer.write(encoder.encode(chunk));
@@ -296,18 +324,35 @@ export async function POST(request: Request) {
           if (line.startsWith("data: ")) {
             const data = line.slice(6).trimEnd();
             if (data === "[DONE]") continue;
+
+            // Parse first; skip lines with malformed JSON.
+            let json: ReturnType<typeof JSON.parse>;
             try {
-              const json = JSON.parse(data);
-              const delta = json.choices?.[0]?.delta?.content ?? "";
-              fullContent += delta;
+              json = JSON.parse(data);
             } catch {
-              // skip malformed chunk
+              continue;
             }
+
+            // OpenRouter cannot change the HTTP status once streaming begins,
+            // so mid-stream errors arrive as SSE events. Detect both shapes:
+            //   • top-level { error: { message, code } }
+            //   • choices[0].finish_reason === "error"
+            if (json.error) {
+              throw new Error(
+                `OpenRouter mid-stream error: ${json.error?.message ?? JSON.stringify(json.error)}`
+              );
+            }
+            if (json.choices?.[0]?.finish_reason === "error") {
+              throw new Error("OpenRouter reported a stream finish error");
+            }
+
+            const delta = json.choices?.[0]?.delta?.content ?? "";
+            fullContent += delta;
           }
         }
       }
 
-      // P2 fix: flush any remaining buffered content after the read loop ends.
+      // Flush any remaining buffered content after the read loop ends.
       // lines.pop() holds back the last (possibly incomplete) line on each
       // iteration. If the stream's final SSE event arrives without a trailing
       // newline, that line never enters the for-loop above. Drain it here so
@@ -317,14 +362,39 @@ export async function POST(request: Request) {
         if (data && data !== "[DONE]") {
           try {
             const json = JSON.parse(data);
-            const delta = json.choices?.[0]?.delta?.content ?? "";
-            fullContent += delta;
+            if (!json.error) {
+              const delta = json.choices?.[0]?.delta?.content ?? "";
+              fullContent += delta;
+            }
           } catch {
             // skip malformed
           }
         }
       }
+    } catch (streamErr) {
+      // Discard any partial content accumulated before the error. The finally
+      // block gates persistence on `if (fullContent)`, so clearing it here
+      // prevents a partial assistant reply from being stored and later
+      // reappearing on reload or being included in summarization.
+      fullContent = "";
+      // Surface stream errors to the client as a structured SSE event so the
+      // browser can exit the spinner and show a user-friendly message rather
+      // than hanging indefinitely or silently showing an empty bubble.
+      const isInactivity =
+        streamErr instanceof DOMException && streamErr.name === "AbortError";
+      const clientMsg = isInactivity
+        ? "Response timed out — please try again."
+        : "Stream interrupted — please try again.";
+      console.error("[brat.gg] Stream error:", streamErr);
+      try {
+        await writer.write(
+          encoder.encode(`event: bratgg_error\ndata: ${JSON.stringify({ message: clientMsg })}\n\n`)
+        );
+      } catch {
+        // writer may already be in an error state; best-effort only
+      }
     } finally {
+      if (inactivityTimer) clearTimeout(inactivityTimer);
       // P1 fix: persist inside its own try/catch so a DB error cannot prevent
       // writer.close() from running. Without this, any rejection from
       // createClient() or .insert() would leave the TransformStream readable
