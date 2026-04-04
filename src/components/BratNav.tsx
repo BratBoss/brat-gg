@@ -16,7 +16,7 @@ export default function BratNav({
   const settingsBrat = searchParams.get("brat") ?? "aria";
 
   return (
-    <nav className="flex items-center gap-1.5 flex-wrap">
+    <nav className="flex items-center gap-5 flex-wrap">
       {links.map((link) => {
         const active =
           link.href.startsWith("/settings")
@@ -27,10 +27,10 @@ export default function BratNav({
             key={link.href}
             href={link.href}
             aria-current={active ? "page" : undefined}
-            className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
+            className={`relative px-0 py-1.5 text-sm transition-colors after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:transition-colors ${
               active
-                ? "text-[#d6e4d2] bg-[#161d17] border-[#334534]"
-                : "text-[#6b8a6e] border-transparent hover:text-[#d6e4d2] hover:bg-[#161d17] hover:border-[#2a3a2c]"
+                ? "text-[#d6e4d2] after:bg-[#5e7d5a]"
+                : "text-[#6b8a6e] hover:text-[#d6e4d2] after:bg-transparent hover:after:bg-[#334534]"
             }`}
           >
             {link.label}
