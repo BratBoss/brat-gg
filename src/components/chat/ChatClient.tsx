@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Message = {
   id: string;
@@ -22,6 +24,62 @@ type BratInfo = {
   portrait: string;
   section: string | null;
   settingsHref: string;
+};
+
+// Static component overrides for ReactMarkdown — defined outside the component
+// to avoid recreation on every render.
+const mdComponents: React.ComponentProps<typeof ReactMarkdown>["components"] = {
+  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+  strong: ({ children }) => (
+    <strong className="font-semibold text-[#d6e4d2]">{children}</strong>
+  ),
+  em: ({ children }) => <em className="italic">{children}</em>,
+  a: ({ href, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      className="text-[#8aaa8c] underline hover:text-[#d6e4d2] transition-colors"
+    >
+      {children}
+    </a>
+  ),
+  ul: ({ children }) => (
+    <ul className="list-disc list-outside ml-4 my-2 space-y-0.5">{children}</ul>
+  ),
+  ol: ({ children }) => (
+    <ol className="list-decimal list-outside ml-4 my-2 space-y-0.5">{children}</ol>
+  ),
+  li: ({ children }) => <li>{children}</li>,
+  // Block code: pre wraps the code element. Override child code via arbitrary variant.
+  pre: ({ children }) => (
+    <pre className="bg-[#0f1410] border border-[#2a3a2c] rounded-md p-3 my-2 overflow-x-auto text-[0.85em] font-mono text-[#8aaa8c] [&_code]:bg-transparent [&_code]:p-0 [&_code]:rounded-none">
+      {children}
+    </pre>
+  ),
+  // Inline code — block code inherits the pre overrides above.
+  code: ({ children, className }) => (
+    <code
+      className={`font-mono text-[0.85em] text-[#8aaa8c] bg-[#0f1410] rounded px-1 py-0.5 ${className ?? ""}`}
+    >
+      {children}
+    </code>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-2 border-[#4a5e4c] pl-3 my-2 italic">
+      {children}
+    </blockquote>
+  ),
+  hr: () => <hr className="border-[#2a3a2c] my-3" />,
+  h1: ({ children }) => (
+    <h1 className="text-base font-semibold text-[#d6e4d2] mt-3 mb-1">{children}</h1>
+  ),
+  h2: ({ children }) => (
+    <h2 className="text-base font-medium text-[#d6e4d2] mt-2 mb-1">{children}</h2>
+  ),
+  h3: ({ children }) => (
+    <h3 className="text-sm font-medium text-[#d6e4d2] mt-2 mb-1">{children}</h3>
+  ),
 };
 
 export default function ChatClient({
@@ -68,6 +126,9 @@ export default function ChatClient({
 
     setError(null);
     setInput("");
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+    }
 
     // Optimistic user message
     const tempUserMsg: Message = {
@@ -168,12 +229,26 @@ export default function ChatClient({
   }
 
   async function handleNewChat() {
+    if (
+      !window.confirm(
+        "Start a new chat? This will erase the current conversation."
+      )
+    ) {
+      return;
+    }
     startTransition(async () => {
       const supabase = createClient();
       // Delete the session — messages cascade
       await supabase.from("chat_sessions").delete().eq("id", sessionId);
       window.location.reload();
     });
+  }
+
+  function handleTextareaChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setInput(e.target.value);
+    // Auto-resize: reset then expand to fit content, capped by max-h via CSS.
+    e.target.style.height = "auto";
+    e.target.style.height = `${e.target.scrollHeight}px`;
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -274,7 +349,7 @@ export default function ChatClient({
           <textarea
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
             placeholder="Write something…"
             rows={1}
@@ -293,7 +368,7 @@ export default function ChatClient({
             )}
           </button>
         </div>
-        <p className="text-[#2a3a2c] text-xs mt-2">
+        <p className="text-[#4a5e4c] text-xs mt-2">
           Enter to send · Shift+Enter for new line
         </p>
       </div>
@@ -353,12 +428,18 @@ function MessageBubble({
             : "bg-[#161d17] border border-[#2a3a2c] text-[#c4d8c0]"
         }`}
       >
-        <p className="whitespace-pre-wrap break-words">
-          {message.content}
-          {isStreaming && (
-            <span className="inline-block w-1.5 h-3.5 bg-[#8fb88a] ml-0.5 animate-blink rounded-sm" />
-          )}
-        </p>
+        {isUser ? (
+          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+        ) : (
+          <div className="break-words">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+              {message.content}
+            </ReactMarkdown>
+            {isStreaming && (
+              <span className="inline-block w-1.5 h-3.5 bg-[#8fb88a] ml-0.5 animate-blink rounded-sm" />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
