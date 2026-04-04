@@ -163,10 +163,12 @@ The build runs TypeScript type-checking. A separate runtime-startup check in `sr
 
 1. Create a new Supabase project.
 2. Run `supabase/migrations/001_initial_schema.sql` in the Supabase SQL editor. This creates:
-   - `profiles` table (user settings, encrypted API key, avatar path)
-   - `chat_sessions` table
+   - `profiles` table (user settings, encrypted API key, avatar path, selected model)
+   - `chat_sessions` table (one active session per user per brat, plus encrypted history-summary metadata)
    - `messages` table
-   - Row Level Security policies on all three tables
+   - A unique constraint on `(user_id, brat_slug)` for `chat_sessions`
+   - An index on `messages(session_id, created_at)` for chat history reads
+   - Row Level Security policies on `profiles`, `chat_sessions`, and `messages`
    - Private `avatars` storage bucket with per-user RLS
    - Trigger to auto-create a profile row on new signup
 3. In Supabase Auth settings: enable **Email** provider, enable **magic links**.
@@ -191,7 +193,7 @@ The build runs TypeScript type-checking. A separate runtime-startup check in `sr
 
 **Common to both:**
 4. `src/proxy.ts` (Next.js middleware) refreshes the session cookie on every request.
-5. Protected pages (`/brats/aria/*`) call `supabase.auth.getUser()` server-side and redirect to `/login` if no session.
+5. Protected pages (for example `/brats/[slug]/chat` and `/settings`) call `supabase.auth.getUser()` server-side and redirect to `/login` if no session.
 
 A `?next=` query param on `/login` is preserved through both flows — it is forwarded to `/auth/callback` via the `redirectTo` URL and then used as the post-login destination.
 
@@ -229,7 +231,8 @@ The `/auth/callback` route already handles OAuth — no extra route is needed. T
 ### How message history is stored
 
 - User and assistant message content is encrypted at rest with `MESSAGE_ENCRYPTION_KEY` before being written to `messages.content`.
-- Message history is decrypted server-side when loading chat history for the UI and when building the context sent to OpenRouter.
+- Per-session history summaries are also stored on `chat_sessions.history_summary` using the same message-encryption path.
+- Message history and summaries are decrypted server-side when loading chat history for the UI and when building the context sent to OpenRouter.
 - Existing legacy plaintext rows remain readable for compatibility; new writes are encrypted. No automatic backfill is performed in this pass.
 
 ### Key existence vs. key value
