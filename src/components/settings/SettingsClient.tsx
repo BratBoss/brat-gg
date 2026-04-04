@@ -67,9 +67,13 @@ export default function SettingsClient({
       .from("avatars")
       .createSignedUrl(path, 3600);
 
-    // If the user had a pending removal and is now uploading a new avatar,
-    // the old file is either already gone or will be overwritten (upsert).
-    pendingAvatarRemoval.current = null;
+    // If the newly uploaded file reuses the exact same storage path as the
+    // pending removal target, the upsert will overwrite it and there's nothing
+    // left to delete on Save. If the extension changed, keep the old pending
+    // path so Save still removes the previous object.
+    if (pendingAvatarRemoval.current === path) {
+      pendingAvatarRemoval.current = null;
+    }
     setAvatarPath(path);
     setAvatarDisplayUrl(signed?.signedUrl ?? null);
     setUploadingAvatar(false);
