@@ -26,10 +26,10 @@ export const BRATS: BratMeta[] = [
   {
     slug: "marcy",
     name: "Marcy",
-    tagline: "Coming soon.",
+    tagline: "Somewhere between deadlines and good intentions.",
     section: "Dorm",
-    available: false,
-    portrait: "/images/brats/marcy.png",
+    available: true,
+    portrait: "/images/marcy/portrait.png",
   },
   {
     slug: "sylvie",

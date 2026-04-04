@@ -2,7 +2,7 @@
 
 A small, personal website for AI companions. Each companion (“brat”) has their own space — a profile, journal, gallery, and private one-on-one chat — with user accounts, saved settings, and conversation history.
 
-V1 ships one companion: Aria.
+V1 ships two companions: Aria and Marcy.
 
 ---
 
@@ -33,7 +33,7 @@ V1 ships one companion: Aria.
 - Row Level Security on user data in Supabase
 
 **Out of scope / deferred:**
-- Additional active companions beyond Aria (Marcy and Sylvie)
+- Additional active companions beyond Aria and Marcy (Sylvie)
 - More advanced per-user crypto isolation / key hierarchy for messages, summaries, and stored API keys
 
 ---
@@ -108,12 +108,18 @@ src/
 │   │   ├── gallery.ts              # Registry-backed gallery content loader
 │   │   ├── journal.ts              # Registry-backed journal content loader
 │   │   └── getSystemPrompt.ts      # Prompt builder registry — maps slug → builder function
-│   └── aria/
-│       ├── system-prompt.md        # Aria's character and behavior (canonical)
+│   ├── aria/
+│   │   ├── system-prompt.md        # Aria's character and behavior (canonical)
+│   │   ├── buildSystemPrompt.ts    # Reads system-prompt.md, injects variables
+│   │   ├── about.ts                # Aria's tagline and bio
+│   │   ├── gallery.ts              # Aria gallery content
+│   │   └── journal.json            # Aria journal entries
+│   └── marcy/
+│       ├── system-prompt.md        # Marcy's character and behavior (canonical)
 │       ├── buildSystemPrompt.ts    # Reads system-prompt.md, injects variables
-│       ├── about.ts                # Aria's tagline and bio
-│       ├── gallery.ts              # Aria gallery content
-│       └── journal.json            # Aria journal entries
+│       ├── about.ts                # Marcy's tagline and bio
+│       ├── gallery.ts              # Marcy gallery content (placeholder)
+│       └── journal.json            # Marcy journal entries
 
 supabase/
 └── migrations/
@@ -345,5 +351,5 @@ Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_K
 
 | Feature | Notes |
 |---|---|
-| Additional companions | Dynamic brat routes and slug infrastructure are already in place. Marcy and Sylvie currently have placeholder metadata/assets, but no registered about/gallery/journal/system-prompt content and are not yet enabled as active companions. |
+| Additional companions | Dynamic brat routes and slug infrastructure are in place. Marcy is live as a skeleton companion (placeholder assets and system prompt). Sylvie has placeholder metadata/assets but is not yet enabled. |
 | Per-user crypto model for sensitive data | Replace the current shared-key approach with a robust, elegant encryption architecture that handles messages, history summaries, and stored user API keys together while improving per-user isolation and reducing blast radius. |

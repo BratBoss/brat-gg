@@ -7,6 +7,7 @@
 // Add a new entry here once a companion has an about.ts in src/content/{slug}/.
 
 import { ariaAbout } from "@/content/aria/about";
+import { marcyAbout } from "@/content/marcy/about";
 
 export type BratAbout = {
   tagline: string;
@@ -15,6 +16,7 @@ export type BratAbout = {
 
 const ABOUT_MAP: Record<string, BratAbout> = {
   aria: ariaAbout,
+  marcy: marcyAbout,
 };
 
 /**
