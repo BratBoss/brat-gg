@@ -129,17 +129,17 @@ export default function SettingsClient({
   }
 
   return (
-    <main className="max-w-lg mx-auto px-6 py-14">
-      <div className="mb-10">
+    <main className="max-w-lg mx-auto px-6 py-8 md:py-10">
+      <div className="mb-7">
         <h1 className="text-2xl font-light text-[#d6e4d2] tracking-tight mb-1">
           Settings
         </h1>
         <p className="text-[#6b8a6e] text-sm">Your profile and preferences.</p>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-8">
+      <form onSubmit={handleSave} className="space-y-6">
         {/* Avatar */}
-        <section className="space-y-3">
+        <section className="space-y-2.5">
           <label className="text-xs tracking-widest uppercase text-[#4a5e4c]">
             Avatar
           </label>
@@ -192,7 +192,7 @@ export default function SettingsClient({
         </section>
 
         {/* Display name */}
-        <section className="space-y-2">
+        <section className="space-y-1.5">
           <label
             htmlFor="displayName"
             className="text-xs tracking-widest uppercase text-[#4a5e4c]"
@@ -214,7 +214,7 @@ export default function SettingsClient({
         <div className="border-t border-[#2a3a2c]" />
 
         {/* OpenRouter API key */}
-        <section className="space-y-2">
+        <section className="space-y-1.5">
           <label
             htmlFor="apiKey"
             className="text-xs tracking-widest uppercase text-[#4a5e4c]"
@@ -240,7 +240,7 @@ export default function SettingsClient({
         </section>
 
         {/* Model */}
-        <section className="space-y-2">
+        <section className="space-y-1.5">
           <label
             htmlFor="model"
             className="text-xs tracking-widest uppercase text-[#4a5e4c]"
