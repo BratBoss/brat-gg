@@ -89,7 +89,7 @@ export default async function ChatPage({
         name: brat.name,
         portrait: brat.portrait,
         section: brat.section,
-        settingsHref: `/brats/${slug}/settings`,
+        settingsHref: "/settings",
       }}
     />
   );

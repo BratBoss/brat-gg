@@ -1,40 +1,18 @@
 import { redirect } from "next/navigation";
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { getBratBySlug } from "@/content/brats";
 import SettingsClient from "@/components/settings/SettingsClient";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const brat = getBratBySlug(slug);
-  if (!brat || !brat.available) return {};
-  return { title: `Settings — ${brat.name} | brat.gg` };
-}
+export const metadata: Metadata = { title: "Settings | brat.gg" };
 
-export default async function SettingsPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = await params;
-  const brat = getBratBySlug(slug);
-
-  if (!brat || !brat.available) {
-    notFound();
-  }
-
+export default async function SettingsPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?next=/brats/${slug}/settings`);
+    redirect("/login?next=/settings");
   }
 
   // Run in parallel: profile data (no key blob) + key existence check.
