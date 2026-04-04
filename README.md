@@ -233,7 +233,7 @@ The `/auth/callback` route already handles OAuth — no extra route is needed. T
 - User and assistant message content is encrypted at rest with `MESSAGE_ENCRYPTION_KEY` before being written to `messages.content`.
 - Per-session history summaries are also stored on `chat_sessions.history_summary` using the same message-encryption path.
 - Message history and summaries are decrypted server-side when loading chat history for the UI and when building the context sent to OpenRouter.
-- Existing legacy plaintext rows remain readable for compatibility; new writes are encrypted. No automatic backfill is performed in this pass.
+- Message content and history summaries are expected to be stored only in the encrypted `enc:iv:authTag:ciphertext` format.
 
 ### Key existence vs. key value
 
@@ -296,7 +296,7 @@ brat.gg is BYOK by design. The server never calls OpenRouter with a site credent
 `src/lib/crypto.ts` throws `ConfigError` if `ENCRYPTION_SECRET` is absent or not exactly 64 hex characters. There is no dev/test fallback. This is intentional: silent crypto degradation is worse than a startup failure.
 
 **3. No MESSAGE_ENCRYPTION_KEY fallback.**
-`src/lib/crypto.ts` throws `ConfigError` if `MESSAGE_ENCRYPTION_KEY` is absent or not exactly 64 hex characters. There is no dev/test fallback. This is intentional for the same reason: silent degradation is worse than a startup failure.
+`src/lib/crypto.ts` throws `ConfigError` if `MESSAGE_ENCRYPTION_KEY` is absent or not exactly 64 hex characters. There is no dev/test fallback. Message content and history summaries are also expected to be stored only in the encrypted format; plaintext compatibility is not part of the supported invariant.
 
 **4. Never return the encrypted key blob to the client.**
 The `openrouter_api_key` column must not appear in any query that is serialized into a server component or API response. Use the HEAD-only count pattern when you only need to know if a key exists.

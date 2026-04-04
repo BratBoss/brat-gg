@@ -111,9 +111,8 @@ export function decryptSecret(stored: string): string {
 // ---------------------------------------------------------------
 // Message content encryption (MESSAGE_ENCRYPTION_KEY)
 //
-// Encrypted payloads are prefixed with "enc:" so that legacy
-// plaintext rows can be read back transparently without a backfill.
-// New rows are always written encrypted.
+// Encrypted payloads are prefixed with "enc:". Message content and
+// history summaries are expected to be stored only in this format.
 // ---------------------------------------------------------------
 
 const ENC_PREFIX = "enc:";
@@ -138,31 +137,27 @@ export function encryptMessage(plaintext: string): string {
 /**
  * Decrypts a message content string produced by encryptMessage.
  *
- * If the value does not start with "enc:", it is returned as-is —
- * this handles legacy plaintext rows written before encryption was
- * enabled, so existing conversation history remains readable.
- *
- * Throws ConfigError if MESSAGE_ENCRYPTION_KEY is absent or malformed.
- * Throws a plain Error if the stored value is malformed or the auth tag fails.
+ * Throws if the stored value is not in the expected encrypted format,
+ * if MESSAGE_ENCRYPTION_KEY is absent or malformed, or if the auth tag fails.
  */
 export function decryptMessage(stored: string): string {
   if (!stored.startsWith(ENC_PREFIX)) {
-    return stored; // legacy plaintext row — return unchanged
+    throw new Error("Stored message is not in encrypted format");
   }
+
   const key = getMessageKey(); // ConfigError propagates as-is
   const payload = stored.slice(ENC_PREFIX.length);
   const parts = payload.split(":");
-  // Validate structural shape: iv (24 hex chars / 12 bytes), authTag (32 hex chars / 16 bytes),
-  // ciphertext (non-empty hex). If the payload doesn't match, the "enc:" prefix was coincidental
-  // plaintext — return the original value unchanged rather than crashing chat history.
+
   if (
     parts.length !== 3 ||
     !/^[0-9a-fA-F]{24}$/.test(parts[0]) ||
     !/^[0-9a-fA-F]{32}$/.test(parts[1]) ||
     !/^[0-9a-fA-F]+$/.test(parts[2])
   ) {
-    return stored; // not a valid encrypted payload — treat as plaintext
+    throw new Error("Stored message has unexpected encrypted format");
   }
+
   const [ivHex, tagHex, ctHex] = parts;
   const iv = Buffer.from(ivHex, "hex");
   const tag = Buffer.from(tagHex, "hex");
