@@ -1,16 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import type { NavLink } from "@/lib/brat-nav";
 
-type NavLink = { label: string; href: string };
-
-export default function BratNav({ links }: { links: NavLink[] }) {
+export default function BratNav({
+  links,
+  bratSlug,
+}: {
+  links: NavLink[];
+  bratSlug: string;
+}) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const settingsBrat = searchParams.get("brat") ?? "aria";
+
   return (
     <nav className="flex items-center gap-1 flex-wrap">
       {links.map((link) => {
-        const active = pathname === link.href;
+        const active =
+          link.href.startsWith("/settings")
+            ? pathname === "/settings" && settingsBrat === bratSlug
+            : pathname === link.href;
         return (
           <Link
             key={link.href}
