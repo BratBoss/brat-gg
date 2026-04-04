@@ -206,7 +206,7 @@ export default function SettingsClient({
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="What should your companions call you?"
             maxLength={60}
-            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors"
+            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-base sm:text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors"
           />
         </section>
 
@@ -232,7 +232,7 @@ export default function SettingsClient({
             value={apiKeyInput}
             onChange={(e) => setApiKeyInput(e.target.value)}
             placeholder={hasApiKey ? "Leave blank to keep current key" : "sk-or-…"}
-            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors font-mono"
+            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-base sm:text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors font-mono"
           />
           <p className="text-[#4a5e4c] text-xs">
             Encrypted before storage. Never visible after saving.
@@ -251,7 +251,7 @@ export default function SettingsClient({
             id="model"
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors appearance-none"
+            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] text-base sm:text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors appearance-none"
           >
             {MODELS.map((m) => (
               <option key={m.value} value={m.value}>
