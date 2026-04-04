@@ -7,7 +7,7 @@ const brats = BRATS;
 
 export default function HomePage() {
   return (
-    <main className="flex-1 flex flex-col">
+    <main className="flex-1 flex flex-col" data-brat="home">
       {/* Header */}
       <HeaderShell
         left={
