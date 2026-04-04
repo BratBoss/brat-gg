@@ -1,8 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { encryptSecret, ConfigError } from "@/lib/crypto";
+import { ALLOWED_MODELS } from "@/lib/models";
 import { NextResponse } from "next/server";
-
-const ALLOWED_MODELS = ["x-ai/grok-4.1-fast", "deepseek/deepseek-v3.2"];
 
 export async function POST(request: Request) {
   const supabase = await createClient();

@@ -40,7 +40,10 @@ create table if not exists public.chat_sessions (
   history_summary                text,
   summary_updated_at             timestamptz,
   last_summarized_message_count  integer not null default 0,
-  created_at                     timestamptz not null default now()
+  created_at                     timestamptz not null default now(),
+  -- Enforces the one-session-per-user-per-brat invariant at the DB level.
+  -- The upsert in getOrCreateSession relies on this constraint.
+  constraint chat_sessions_user_brat_unique unique (user_id, brat_slug)
 );
 
 alter table public.chat_sessions enable row level security;
@@ -59,6 +62,11 @@ create table if not exists public.messages (
   content     text not null,
   created_at  timestamptz not null default now()
 );
+
+-- Covers the hot query: messages for a session ordered by time.
+-- Used by both chat page load and the API route's history window.
+create index if not exists messages_session_created_idx
+  on public.messages (session_id, created_at asc);
 
 alter table public.messages enable row level security;
 
