@@ -259,6 +259,7 @@ export default function ChatClient({
   }
 
   const userLabel = profile.displayName ?? "You";
+  const hasCommittedMessages = messages.length > 0;
   const allDisplayMessages = [
     ...messages,
     ...(streamingContent
@@ -296,8 +297,8 @@ export default function ChatClient({
 
         <button
           onClick={handleNewChat}
-          disabled={isPending}
-          className="text-xs text-[#4a5e4c] hover:text-[#8aaa8c] transition-colors disabled:opacity-40"
+          disabled={isPending || !hasCommittedMessages}
+          className="text-xs text-[#4a5e4c] hover:text-[#8aaa8c] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           New chat
         </button>
