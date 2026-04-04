@@ -33,8 +33,20 @@ function getBratThemeFromParams(searchParams: ReturnType<typeof useSearchParams>
   if (explicitBrat) return explicitBrat;
 
   const next = searchParams.get("next") ?? "";
-  const match = next.match(/^\/brats\/([^/?#]+)/);
-  return match?.[1];
+
+  const bratPathMatch = next.match(/^\/brats\/([^/?#]+)/);
+  if (bratPathMatch?.[1]) return bratPathMatch[1];
+
+  const settingsMatch = next.match(/^\/settings\?brat=([^&#]+)/);
+  if (settingsMatch?.[1]) {
+    try {
+      return decodeURIComponent(settingsMatch[1]).trim() || undefined;
+    } catch {
+      return settingsMatch[1].trim() || undefined;
+    }
+  }
+
+  return undefined;
 }
 
 function LoginForm() {
