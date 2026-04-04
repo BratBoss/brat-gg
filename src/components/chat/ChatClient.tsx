@@ -430,14 +430,20 @@ function MessageBubble({
       >
         {isUser ? (
           <p className="whitespace-pre-wrap break-words">{message.content}</p>
+        ) : isStreaming ? (
+          // While streaming, render as plain text so the cursor can sit inline
+          // at the end of the content. ReactMarkdown wraps output in block-level
+          // elements (<p>, etc.), which forces a sibling <span> onto a new line.
+          // Markdown renders once the stream completes and isStreaming is false.
+          <p className="whitespace-pre-wrap break-words">
+            {message.content}
+            <span className="inline-block w-1.5 h-3.5 bg-[#8fb88a] ml-0.5 animate-blink rounded-sm" />
+          </p>
         ) : (
           <div className="break-words">
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
               {message.content}
             </ReactMarkdown>
-            {isStreaming && (
-              <span className="inline-block w-1.5 h-3.5 bg-[#8fb88a] ml-0.5 animate-blink rounded-sm" />
-            )}
           </div>
         )}
       </div>
