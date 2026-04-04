@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
+const authLinkClass =
+  "inline-flex items-center leading-none text-xs text-[#4a5e4c] hover:text-[#8aaa8c] transition-colors";
+
 export default async function AuthStatus() {
   const supabase = await createClient();
   const {
@@ -11,7 +14,7 @@ export default async function AuthStatus() {
     <form action="/api/auth/signout" method="POST">
       <button
         type="submit"
-        className="text-sm text-[#6b8a6e] hover:text-[#d6e4d2] transition-colors"
+        className={authLinkClass}
       >
         Sign out
       </button>
@@ -19,7 +22,7 @@ export default async function AuthStatus() {
   ) : (
     <Link
       href="/login"
-      className="text-sm text-[#6b8a6e] hover:text-[#d6e4d2] transition-colors"
+      className={authLinkClass}
     >
       Sign in
     </Link>
