@@ -1,15 +1,7 @@
-// Per-session conversation summarization helpers.
-//
-// Summaries are generated at request time when enough new messages have
-// accumulated outside the live context window. The user's own OpenRouter
-// key is used (BYOK preserved). Summary text is stored encrypted at rest
-// using the same MESSAGE_ENCRYPTION_KEY / encryptMessage pattern used for
-// message content.
-//
-// Summarization is incremental: each refresh only passes the messages that
-// have aged out of the live window since the previous summary, plus the
-// existing summary text for continuity. This bounds the summarizer's input
-// regardless of how long the conversation grows.
+// Per-session conversation summarization.
+// Triggered when messages age out of the live window. Uses the user's OpenRouter key (BYOK).
+// Incremental: each refresh passes only newly aged-out messages + previous summary,
+// bounding input regardless of conversation length. Stored encrypted (encryptMessage).
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -36,13 +28,7 @@ Rules:
 - Write in third person from the companion's perspective ("The user said...", "They mentioned...").
 - Stay under 350 words. Return only the summary text — no preamble, labels, or framing.`;
 
-/**
- * Returns true when a summary refresh should be triggered for this session.
- *
- * Conditions:
- *  - There are messages outside the live window (something to summarize).
- *  - Enough new messages have arrived since the last summary watermark.
- */
+/** True when messages exist outside the live window AND enough new messages since last refresh. */
 export function shouldRefreshSummary(
   totalMessageCount: number,
   lastSummarizedMessageCount: number
@@ -53,13 +39,8 @@ export function shouldRefreshSummary(
 }
 
 /**
- * Returns the slice of chatMessages that should be incorporated into the
- * next summary — messages that have aged out of the live window since the
- * last summary was generated.
- *
- * On the first summary (lastSummarizedMessageCount === 0) this returns all
- * older messages. On subsequent refreshes it returns only the newly aged-out
- * messages that were in the live window when the previous summary was made.
+ * Messages to incorporate into the next summary — those aged out since lastSummarizedMessageCount.
+ * First summary (===0): all older messages. Subsequent: only newly aged-out messages.
  */
 export function getMessagesToSummarize(
   chatMessages: { role: string; content: string }[],
@@ -73,17 +54,10 @@ export function getMessagesToSummarize(
 }
 
 /**
- * Calls OpenRouter to produce an updated memory summary for a session.
- *
- * If previousSummary is present, only the newly aged-out messages are passed
- * alongside it and the model rewrites the combined memory as a single artifact.
- * If no previousSummary, the new messages are summarized from scratch.
- *
- * companionName is the display name for the assistant speaker in the transcript
- * (e.g. "Aria"). Pass it explicitly so this helper stays companion-agnostic.
- *
- * Throws on failure — callers must catch and fall back gracefully.
- * A failed summary must never block the user's chat request.
+ * Calls OpenRouter to produce an updated session memory summary.
+ * Passes only newly aged-out messages + previousSummary (if any); model rewrites as one artifact.
+ * companionName labels the assistant speaker. Throws on failure — callers must catch;
+ * a failed summary must never block the chat request.
  */
 export async function generateSummary(
   newMessages: { role: string; content: string }[],

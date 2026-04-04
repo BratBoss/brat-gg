@@ -54,7 +54,6 @@ export async function POST(request: Request) {
   const { sessionId, message } = body as { sessionId: string; message: string };
 
   // Verify session belongs to this user (RLS also enforces this, belt-and-suspenders).
-  // Also load summary fields and brat_slug here to avoid a second round-trip.
   const { data: sessionRow } = await supabase
     .from("chat_sessions")
     .select("id, brat_slug, history_summary, last_summarized_message_count")
@@ -66,10 +65,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
   }
 
-  // Resolve the prompt builder for this session's companion before doing any
-  // expensive work. An unrecognised slug means the session references a
-  // companion that does not yet have a real system prompt — fail clearly
-  // rather than silently falling back to a different companion.
+  // Fail loudly for unknown slugs rather than silently using a wrong companion.
   const buildSystemPrompt = getSystemPromptBuilder(sessionRow.brat_slug as string);
   if (!buildSystemPrompt) {
     return NextResponse.json(
@@ -78,15 +74,13 @@ export async function POST(request: Request) {
     );
   }
 
-  // Get user's profile — key, model, and display name for the system prompt
   const { data: profile } = await supabase
     .from("profiles")
     .select("openrouter_api_key, openrouter_model, display_name")
     .eq("id", user.id)
     .single();
 
-  // BYOK requirement: every user must supply their own key.
-  // No key stored = normal state for a new user, not a server error.
+  // BYOK: missing key is normal for new users (422, not 500).
   if (!profile?.openrouter_api_key) {
     return NextResponse.json(
       { error: "No OpenRouter API key configured. Please add one in Settings." },
@@ -94,9 +88,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Decrypt the user's key. Two distinct failure modes:
-  //   ConfigError  → ENCRYPTION_SECRET is absent/wrong (deployment error, 500)
-  //   plain Error  → stored value is malformed (user can re-enter key, 422)
+  // ConfigError → deployment error (500); plain Error → malformed stored key (422).
   let decryptedApiKey: string;
   try {
     decryptedApiKey = decryptSecret(profile.openrouter_api_key);
@@ -116,19 +108,12 @@ export async function POST(request: Request) {
 
   const model = profile.openrouter_model ?? "x-ai/grok-4.1-fast";
 
-  // Resolve the companion display name from shared metadata.
-  // Used as the speaker label in summarization transcripts.
+  // Speaker label for summarization transcripts.
   const companionName =
     getBratBySlug(sessionRow.brat_slug as string)?.name ?? "Aria";
 
-  // Decrypt the stored summary, if present.
-  //
-  // On failure: treat the summary AND its watermark as unusable for this
-  // request. Zeroing lastSummarizedCount ensures that context-building falls
-  // back to the full HISTORY_CONTEXT_LIMIT and that any subsequent
-  // summarization rebuilds from scratch rather than passing a stale offset to
-  // getMessagesToSummarize, which would silently skip the messages the corrupt
-  // summary was supposed to cover.
+  // On decrypt failure: zero watermark so context falls back to HISTORY_CONTEXT_LIMIT
+  // and next summarization rebuilds from scratch (stale offset would silently skip messages).
   let historySummary: string | null = null;
   let lastSummarizedCount = (sessionRow.last_summarized_message_count as number | null) ?? 0;
 
@@ -148,7 +133,7 @@ export async function POST(request: Request) {
     content: encryptMessage(message),
   });
 
-  // Load full conversation history for context (includes the message just persisted)
+  // Load history including the message just persisted.
   const { data: history } = await supabase
     .from("messages")
     .select("role, content")
@@ -160,11 +145,7 @@ export async function POST(request: Request) {
     content: decryptMessage(m.content),
   }));
 
-  // ── Conversation summary refresh ─────────────────────────────────────────
-  // Triggered at request time when enough new messages have aged out of the
-  // live context window since the last summary. If summarization fails the
-  // chat request continues normally — historySummary retains its previous
-  // value (or null), and the model receives the full trimmed history instead.
+  // Refresh summary if enough messages aged out. On failure, chat continues with stale/null summary.
   if (shouldRefreshSummary(chatMessages.length, lastSummarizedCount)) {
     try {
       const newMessages = getMessagesToSummarize(chatMessages, lastSummarizedCount);
@@ -177,13 +158,7 @@ export async function POST(request: Request) {
           process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
           companionName
         );
-        // Only promote the new summary in-memory if the DB write succeeds.
-        // If the write fails (RLS error, missing column, transient DB error),
-        // historySummary stays at its previous value so the watermark stored in
-        // last_summarized_message_count remains consistent with the actual
-        // persisted summary. Without this check, in-memory state diverges from
-        // DB state and future requests re-summarize the same messages or lose
-        // continuity.
+        // Only advance in-memory state if DB write succeeds — keeps watermark and persisted summary in sync.
         const { error: updateError } = await supabase
           .from("chat_sessions")
           .update({
@@ -196,20 +171,13 @@ export async function POST(request: Request) {
           console.error("[brat.gg] Failed to persist conversation summary:", updateError.message);
         } else {
           historySummary = newSummary;
-          // Advance the in-memory watermark to match what was just written to DB.
-          // Without this, the context builder below computes the watermark from
-          // the stale pre-refresh count and re-sends messages that are already
-          // covered by the new summary. In the corrupt-summary recovery path
-          // (where lastSummarizedCount was reset to 0) this is especially bad:
-          // the full chat history would be sent as raw context on this request.
-          lastSummarizedCount = chatMessages.length;
+          lastSummarizedCount = chatMessages.length; // advance watermark to match DB
         }
       }
     } catch (err) {
       console.error("[brat.gg] Conversation summary refresh failed, continuing without update:", err);
     }
   }
-  // ─────────────────────────────────────────────────────────────────────────
 
   const systemPrompt = buildSystemPrompt({
     userName: profile.display_name ?? null,
@@ -222,17 +190,9 @@ export async function POST(request: Request) {
     historySummary,
   });
 
-  // Build the raw context window sent alongside the system prompt.
-  //
-  // When a summary exists:
-  //   The summary covers messages[0 .. (lastSummarizedCount - LIVE_WINDOW) - 1].
-  //   Raw context must start at the watermark index (lastSummarizedCount - LIVE_WINDOW)
-  //   so that no message falls between the summary and the live window.
-  //   Between refreshes the raw window grows by at most SUMMARY_TRIGGER_DELTA
-  //   messages before the next refresh collapses it back to ~LIVE_WINDOW.
-  //
-  // When no summary exists:
-  //   Fall back to the full HISTORY_CONTEXT_LIMIT.
+  // Raw context window: when a summary exists, start at (lastSummarizedCount - LIVE_WINDOW)
+  // so no messages fall between summary coverage and the live window.
+  // Without a summary, fall back to HISTORY_CONTEXT_LIMIT.
   let contextMessages: { role: string; content: string }[];
   if (historySummary) {
     const watermark = Math.max(0, lastSummarizedCount - LIVE_WINDOW);
@@ -244,9 +204,7 @@ export async function POST(request: Request) {
     contextMessages = trimHistory(chatMessages, HISTORY_CONTEXT_LIMIT);
   }
 
-  // Stream from OpenRouter.
-  // streamAbortController lets the inactivity watchdog kill a stalled
-  // connection so writer.close() always runs and the browser never hangs.
+  // streamAbortController: inactivity watchdog aborts stalled connections so writer.close() always runs.
   const streamAbortController = new AbortController();
 
   const orResponse = await fetch(OPENROUTER_API_URL, {
@@ -288,11 +246,7 @@ export async function POST(request: Request) {
     const reader = orResponse.body!.getReader();
     let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // Resets (or starts) the inactivity watchdog. Called once at the top of the
-    // read loop and again on every chunk received. If STREAM_INACTIVITY_MS
-    // elapses with no new bytes, the OpenRouter fetch is aborted — reader.read()
-    // throws an AbortError which is caught below, and writer.close() runs via
-    // the finally block so the browser exits the spinner.
+    // After STREAM_INACTIVITY_MS with no bytes, abort fetch → reader.read() throws → finally closes writer.
     function resetInactivityTimer() {
       if (inactivityTimer) clearTimeout(inactivityTimer);
       inactivityTimer = setTimeout(
@@ -313,9 +267,7 @@ export async function POST(request: Request) {
         const chunk = decoder.decode(value, { stream: true });
         await writer.write(encoder.encode(chunk));
 
-        // Accumulate into lineBuffer so SSE events split across read() calls
-        // are reassembled before parsing. lines.pop() retains any incomplete
-        // trailing line for the next iteration.
+        // Reassemble SSE events split across reads; lines.pop() holds partial trailing line.
         lineBuffer += chunk;
         const lines = lineBuffer.split("\n");
         lineBuffer = lines.pop() ?? "";
@@ -352,11 +304,7 @@ export async function POST(request: Request) {
         }
       }
 
-      // Flush any remaining buffered content after the read loop ends.
-      // lines.pop() holds back the last (possibly incomplete) line on each
-      // iteration. If the stream's final SSE event arrives without a trailing
-      // newline, that line never enters the for-loop above. Drain it here so
-      // the last token is not silently dropped from fullContent.
+      // Drain lineBuffer: final SSE event may lack a trailing newline and miss the for-loop.
       if (lineBuffer.startsWith("data: ")) {
         const data = lineBuffer.slice(6).trimEnd();
         if (data && data !== "[DONE]") {
@@ -384,14 +332,9 @@ export async function POST(request: Request) {
         }
       }
     } catch (streamErr) {
-      // Discard any partial content accumulated before the error. The finally
-      // block gates persistence on `if (fullContent)`, so clearing it here
-      // prevents a partial assistant reply from being stored and later
-      // reappearing on reload or being included in summarization.
+      // Clear partial content — persistence is gated on fullContent, preventing partial reply storage.
       fullContent = "";
-      // Surface stream errors to the client as a structured SSE event so the
-      // browser can exit the spinner and show a user-friendly message rather
-      // than hanging indefinitely or silently showing an empty bubble.
+      // Send structured SSE error so browser exits spinner instead of hanging.
       const isInactivity =
         streamErr instanceof DOMException && streamErr.name === "AbortError";
       const clientMsg = isInactivity
@@ -407,10 +350,7 @@ export async function POST(request: Request) {
       }
     } finally {
       if (inactivityTimer) clearTimeout(inactivityTimer);
-      // P1 fix: persist inside its own try/catch so a DB error cannot prevent
-      // writer.close() from running. Without this, any rejection from
-      // createClient() or .insert() would leave the TransformStream readable
-      // open forever, hanging the browser's reader.read() indefinitely.
+      // DB errors must not prevent writer.close() — a hanging TransformStream blocks the browser forever.
       try {
         if (fullContent) {
           const supabase2 = await createClient();

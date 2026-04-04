@@ -102,13 +102,11 @@ export default function ChatClient({
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Smooth scroll when a new committed message is added.
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Instant scroll during streaming — avoids competing smooth-scroll animations
-  // on every chunk which causes visible scroll jitter.
+  // Instant (not smooth) scroll during streaming — smooth on every chunk causes jitter.
   useEffect(() => {
     if (streamingContent) {
       bottomRef.current?.scrollIntoView({ behavior: "instant" });
@@ -142,9 +140,7 @@ export default function ChatClient({
     setStreaming(true);
     setStreamingContent("");
 
-    // Client-side inactivity watchdog: if no new bytes arrive from the server
-    // for CLIENT_INACTIVITY_MS, abort the fetch so reader.read() throws and
-    // the finally block always runs — guaranteeing setStreaming(false) fires.
+    // Client-side watchdog: abort after CLIENT_INACTIVITY_MS so finally always runs (setStreaming(false)).
     const fetchAbortController = new AbortController();
     const CLIENT_INACTIVITY_MS = 45_000;
     let clientInactivityTimer: ReturnType<typeof setTimeout> | null = null;
@@ -182,9 +178,7 @@ export default function ChatClient({
 
       const decoder = new TextDecoder();
       let lineBuffer = "";
-      // Tracks the SSE event type set by an `event:` field line. Persists
-      // across read() calls (chunks may split across field lines) and resets
-      // on blank lines (SSE message boundaries) per the SSE spec.
+      // Tracks current SSE event type; resets on blank lines (SSE message boundaries).
       let pendingEventType = "";
 
       while (true) {
@@ -195,9 +189,7 @@ export default function ChatClient({
 
         const chunk = decoder.decode(value, { stream: true });
 
-        // Accumulate into lineBuffer so SSE events split across read() calls
-        // are reassembled before parsing. lines.pop() retains any incomplete
-        // trailing line for the next iteration.
+        // Reassemble SSE events split across reads; lines.pop() holds partial trailing line.
         lineBuffer += chunk;
         const lines = lineBuffer.split("\n");
         lineBuffer = lines.pop() ?? "";
@@ -236,9 +228,7 @@ export default function ChatClient({
         }
       }
 
-      // Flush any remaining buffered line after the read loop ends
-      // (guards against a final SSE event that arrives without a trailing newline).
-      // bratgg_error events always end with \n\n so they won't appear here.
+      // Drain lineBuffer: final SSE event may lack trailing newline and miss the for-loop.
       if (lineBuffer.startsWith("data: ")) {
         const data = lineBuffer.slice(6).trimEnd();
         if (data && data !== "[DONE]") {
@@ -253,9 +243,7 @@ export default function ChatClient({
         }
       }
 
-      // Only commit if the stream delivered actual content. An empty fullContent
-      // means the stream closed without any tokens (e.g. mid-stream error that
-      // didn't produce a bratgg_error event, or an empty model response).
+      // Only commit if stream delivered actual content (guards empty/errorless-close responses).
       if (fullContent.trim()) {
         const assistantMsg: Message = {
           id: crypto.randomUUID(),
@@ -303,7 +291,6 @@ export default function ChatClient({
 
   function handleTextareaChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setInput(e.target.value);
-    // Auto-resize: reset then expand to fit content, capped by max-h via CSS.
     e.target.style.height = "auto";
     e.target.style.height = `${e.target.scrollHeight}px`;
   }
@@ -489,10 +476,7 @@ function MessageBubble({
         {isUser ? (
           <p className="whitespace-pre-wrap break-words">{message.content}</p>
         ) : isStreaming ? (
-          // While streaming, render as plain text so the cursor can sit inline
-          // at the end of the content. ReactMarkdown wraps output in block-level
-          // elements (<p>, etc.), which forces a sibling <span> onto a new line.
-          // Markdown renders once the stream completes and isStreaming is false.
+          // Plain text while streaming: ReactMarkdown's block elements push the cursor span to a new line.
           <p className="whitespace-pre-wrap break-words">
             {message.content}
             <span className="inline-block w-1.5 h-3.5 bg-[var(--th-accent-bright)] ml-0.5 animate-blink rounded-sm" />
