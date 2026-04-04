@@ -32,6 +32,9 @@ export default function SettingsClient({
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Tracks a storage path that should be deleted when Save succeeds.
+  // Set on Remove; cleared on successful Save or if the user re-uploads over it.
+  const pendingAvatarRemoval = useRef<string | null>(null);
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -64,9 +67,20 @@ export default function SettingsClient({
       .from("avatars")
       .createSignedUrl(path, 3600);
 
+    // If the user had a pending removal and is now uploading a new avatar,
+    // the old file is either already gone or will be overwritten (upsert).
+    pendingAvatarRemoval.current = null;
     setAvatarPath(path);
     setAvatarDisplayUrl(signed?.signedUrl ?? null);
     setUploadingAvatar(false);
+  }
+
+  function handleRemoveAvatar() {
+    if (!avatarPath) return;
+    // Stash the path for deletion at Save time; do not touch storage yet.
+    pendingAvatarRemoval.current = avatarPath;
+    setAvatarPath(null);
+    setAvatarDisplayUrl(null);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -99,6 +113,12 @@ export default function SettingsClient({
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Failed to save settings.");
     } else {
+      // DB is consistent — now safe to delete the old file from storage.
+      if (pendingAvatarRemoval.current) {
+        const supabase = createClient();
+        await supabase.storage.from("avatars").remove([pendingAvatarRemoval.current]);
+        pendingAvatarRemoval.current = null;
+      }
       setSaved(true);
       if (apiKeyInput.trim() !== "") {
         setHasApiKey(true);
@@ -138,16 +158,28 @@ export default function SettingsClient({
                 </div>
               )}
             </div>
-            <div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingAvatar}
-                className="text-sm text-[#6b8a6e] hover:text-[#d6e4d2] transition-colors disabled:opacity-40"
-              >
-                {uploadingAvatar ? "Uploading…" : "Change avatar"}
-              </button>
-              <p className="text-[#4a5e4c] text-xs mt-0.5">JPG or PNG, max 2MB</p>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="text-sm text-[#6b8a6e] hover:text-[#d6e4d2] transition-colors disabled:opacity-40"
+                >
+                  {uploadingAvatar ? "Uploading…" : "Change avatar"}
+                </button>
+                {avatarDisplayUrl && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    disabled={uploadingAvatar}
+                    className="text-sm text-[#4a5e4c] hover:text-red-400/70 transition-colors disabled:opacity-40"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <p className="text-[#4a5e4c] text-xs">JPG or PNG, max 2MB</p>
             </div>
           </div>
           <input
