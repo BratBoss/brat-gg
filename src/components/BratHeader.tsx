@@ -17,7 +17,7 @@ export default async function BratHeader({ brat }: { brat: BratMeta }) {
       <div className="flex items-center text-sm">
         <Link
           href="/"
-          className="text-[#bfcbb7] text-sm tracking-widest uppercase hover:text-[#d6e4d2] transition-colors"
+          className="text-[#8aaa8c] text-sm tracking-widest uppercase hover:text-[#d6e4d2] transition-colors"
         >
           brat.gg
         </Link>
