@@ -274,7 +274,7 @@ export default function ChatClient({
   ];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-65px)]">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Chat header */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-[#2a3a2c]">
         <div className="flex items-center gap-3">
@@ -304,7 +304,7 @@ export default function ChatClient({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6 space-y-6">
         {allDisplayMessages.length === 0 && (
           <div className="flex items-center justify-center h-full text-center">
             {profile.hasApiKey ? (
