@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 const authLinkClass =
-  "inline-flex items-center leading-none text-xs text-[#4a5e4c] hover:text-[#8aaa8c] transition-colors";
+  "inline-flex items-center leading-none text-xs text-[var(--th-muted)] hover:text-[var(--th-dim)] transition-colors";
 
 export default async function AuthStatus({
   loginHref = "/login",

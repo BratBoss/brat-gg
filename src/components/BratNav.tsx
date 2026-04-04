@@ -29,8 +29,8 @@ export default function BratNav({
             aria-current={active ? "page" : undefined}
             className={`relative px-0 py-1.5 text-sm transition-colors after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:transition-colors ${
               active
-                ? "text-[#d6e4d2] after:bg-[#5e7d5a]"
-                : "text-[#6b8a6e] hover:text-[#d6e4d2] after:bg-transparent hover:after:bg-[#334534]"
+                ? "text-[var(--th-text)] after:bg-[var(--th-accent)]"
+                : "text-[var(--th-subtle)] hover:text-[var(--th-text)] after:bg-transparent hover:after:bg-[var(--th-surface-nav)]"
             }`}
           >
             {link.label}

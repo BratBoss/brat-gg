@@ -104,19 +104,19 @@ function LoginForm() {
     <>
       {submitted ? (
         <div className="text-center space-y-3">
-          <p className="text-[#d6e4d2] text-lg font-light">Check your email.</p>
-          <p className="text-[#6b8a6e] text-sm leading-relaxed">
+          <p className="text-[var(--th-text)] text-lg font-light">Check your email.</p>
+          <p className="text-[var(--th-subtle)] text-sm leading-relaxed">
             A magic link has been sent to{" "}
-            <span className="text-[#8aaa8c]">{email}</span>. Click it to sign
+            <span className="text-[var(--th-dim)]">{email}</span>. Click it to sign
             in — no password needed.
           </p>
         </div>
       ) : (
         <>
-          <h1 className="text-2xl font-light text-[#d6e4d2] mb-2 text-center">
+          <h1 className="text-2xl font-light text-[var(--th-text)] mb-2 text-center">
             Sign in
           </h1>
-          <p className="text-[#6b8a6e] text-sm text-center mb-8">
+          <p className="text-[var(--th-subtle)] text-sm text-center mb-8">
             Enter your email and we will send you a magic link.
           </p>
 
@@ -128,7 +128,7 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={busy}
-              className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder:text-[#d6e4d2]/55 text-base sm:text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors disabled:opacity-50"
+              className="w-full px-4 py-3 rounded-md bg-[var(--th-surface)] border border-[var(--th-border)] text-[var(--th-text)] placeholder:text-[var(--th-text)]/55 text-base sm:text-sm focus:outline-none focus:border-[var(--th-accent)] transition-colors disabled:opacity-50"
             />
 
             {(error || urlError === "auth_failed") && (
@@ -140,16 +140,16 @@ function LoginForm() {
             <button
               type="submit"
               disabled={busy}
-              className="w-full py-3 rounded-md bg-[#2a3a2c] hover:bg-[#3a4e3c] text-[#d6e4d2] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 rounded-md bg-[var(--th-border)] hover:bg-[var(--th-surface-hover)] text-[var(--th-text)] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {authLoading === "magic-link" ? "Sending…" : "Send magic link"}
             </button>
           </form>
 
           <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-[#2a3a2c]" />
-            <span className="text-[#4a5e4c] text-xs">or</span>
-            <div className="flex-1 h-px bg-[#2a3a2c]" />
+            <div className="flex-1 h-px bg-[var(--th-border)]" />
+            <span className="text-[var(--th-muted)] text-xs">or</span>
+            <div className="flex-1 h-px bg-[var(--th-border)]" />
           </div>
 
           <div className="flex flex-col gap-3">
@@ -159,7 +159,7 @@ function LoginForm() {
                 type="button"
                 disabled={busy}
                 onClick={() => handleOAuth(provider)}
-                className="w-full py-3 rounded-md border border-[#2a3a2c] hover:border-[#3a4e3c] hover:bg-[#161d17] text-[#8aaa8c] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
+                className="w-full py-3 rounded-md border border-[var(--th-border)] hover:border-[var(--th-surface-hover)] hover:bg-[var(--th-surface)] text-[var(--th-dim)] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
               >
                 {icon}
                 {authLoading === provider ? "Connecting…" : `Continue with ${label}`}
@@ -183,7 +183,7 @@ function LoginPageInner() {
         <div className="mb-10 text-center">
           <Link
             href="/"
-            className="text-[#8aaa8c] text-sm tracking-widest uppercase hover:text-[#d6e4d2] transition-colors"
+            className="text-[var(--th-dim)] text-sm tracking-widest uppercase hover:text-[var(--th-text)] transition-colors"
           >
             brat.gg
           </Link>
@@ -193,16 +193,16 @@ function LoginPageInner() {
           fallback={
             <div className="space-y-6">
               <div>
-                <h1 className="text-2xl font-light text-[#d6e4d2] mb-2 text-center">
+                <h1 className="text-2xl font-light text-[var(--th-text)] mb-2 text-center">
                   Sign in
                 </h1>
-                <p className="text-[#6b8a6e] text-sm text-center">
+                <p className="text-[var(--th-subtle)] text-sm text-center">
                   Enter your email and we will send you a magic link.
                 </p>
               </div>
               <div className="flex flex-col gap-4">
-                <div className="h-11 rounded-md bg-[#161d17] border border-[#2a3a2c] animate-pulse" />
-                <div className="h-11 rounded-md bg-[#2a3a2c] animate-pulse" />
+                <div className="h-11 rounded-md bg-[var(--th-surface)] border border-[var(--th-border)] animate-pulse" />
+                <div className="h-11 rounded-md bg-[var(--th-border)] animate-pulse" />
               </div>
             </div>
           }
@@ -223,23 +223,23 @@ export default function LoginPage() {
             <div className="mb-10 text-center">
               <Link
                 href="/"
-                className="text-[#8aaa8c] text-sm tracking-widest uppercase hover:text-[#d6e4d2] transition-colors"
+                className="text-[var(--th-dim)] text-sm tracking-widest uppercase hover:text-[var(--th-text)] transition-colors"
               >
                 brat.gg
               </Link>
             </div>
             <div className="space-y-6">
               <div>
-                <h1 className="text-2xl font-light text-[#d6e4d2] mb-2 text-center">
+                <h1 className="text-2xl font-light text-[var(--th-text)] mb-2 text-center">
                   Sign in
                 </h1>
-                <p className="text-[#6b8a6e] text-sm text-center">
+                <p className="text-[var(--th-subtle)] text-sm text-center">
                   Enter your email and we will send you a magic link.
                 </p>
               </div>
               <div className="flex flex-col gap-4">
-                <div className="h-11 rounded-md bg-[#161d17] border border-[#2a3a2c] animate-pulse" />
-                <div className="h-11 rounded-md bg-[#2a3a2c] animate-pulse" />
+                <div className="h-11 rounded-md bg-[var(--th-surface)] border border-[var(--th-border)] animate-pulse" />
+                <div className="h-11 rounded-md bg-[var(--th-border)] animate-pulse" />
               </div>
             </div>
           </div>

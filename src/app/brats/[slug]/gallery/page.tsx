@@ -30,10 +30,10 @@ export default async function GalleryPage({
   return (
     <main className="max-w-5xl mx-auto px-6 py-14">
       <div className="mb-10">
-        <h1 className="text-2xl font-light text-[#d6e4d2] tracking-tight mb-1">
+        <h1 className="text-2xl font-light text-[var(--th-text)] tracking-tight mb-1">
           Gallery
         </h1>
-        <p className="text-[#6b8a6e] text-sm">A collection of moments.</p>
+        <p className="text-[var(--th-subtle)] text-sm">A collection of moments.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -43,7 +43,7 @@ export default async function GalleryPage({
             href={img.src}
             target="_blank"
             rel="noreferrer"
-            className="group block rounded-lg overflow-hidden border border-[#2a3a2c] bg-[#161d17] hover:border-[#5e7d5a] transition-colors"
+            className="group block rounded-lg overflow-hidden border border-[var(--th-border)] bg-[var(--th-surface)] hover:border-[var(--th-accent)] transition-colors"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

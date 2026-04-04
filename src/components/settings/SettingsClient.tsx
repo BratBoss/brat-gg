@@ -131,20 +131,20 @@ export default function SettingsClient({
   return (
     <main className="max-w-lg mx-auto px-6 py-7 md:py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-light text-[#d6e4d2] tracking-tight mb-1">
+        <h1 className="text-2xl font-light text-[var(--th-text)] tracking-tight mb-1">
           Settings
         </h1>
-        <p className="text-[#6b8a6e] text-sm">Your profile and preferences.</p>
+        <p className="text-[var(--th-subtle)] text-sm">Your profile and preferences.</p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-5">
         {/* Avatar */}
         <section className="space-y-2">
-          <label className="text-xs tracking-widest uppercase text-[#4a5e4c]">
+          <label className="text-xs tracking-widest uppercase text-[var(--th-muted)]">
             Avatar
           </label>
           <div className="flex items-center gap-5">
-            <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[#2a3a2c] bg-[#161d17] shrink-0">
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[var(--th-border)] bg-[var(--th-surface)] shrink-0">
               {avatarDisplayUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -153,7 +153,7 @@ export default function SettingsClient({
                   className="absolute inset-0 h-full w-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[#4a5e4c] text-sm">
+                <div className="w-full h-full flex items-center justify-center text-[var(--th-muted)] text-sm">
                   {displayName?.[0]?.toUpperCase() ?? "?"}
                 </div>
               )}
@@ -164,7 +164,7 @@ export default function SettingsClient({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingAvatar}
-                  className="text-sm text-[#6b8a6e] hover:text-[#d6e4d2] transition-colors disabled:opacity-40"
+                  className="text-sm text-[var(--th-subtle)] hover:text-[var(--th-text)] transition-colors disabled:opacity-40"
                 >
                   {uploadingAvatar ? "Uploading…" : "Change avatar"}
                 </button>
@@ -173,13 +173,13 @@ export default function SettingsClient({
                     type="button"
                     onClick={handleRemoveAvatar}
                     disabled={uploadingAvatar}
-                    className="text-sm text-[#4a5e4c] hover:text-red-400/70 transition-colors disabled:opacity-40"
+                    className="text-sm text-[var(--th-muted)] hover:text-red-400/70 transition-colors disabled:opacity-40"
                   >
                     Remove
                   </button>
                 )}
               </div>
-              <p className="text-[#4a5e4c] text-xs">JPG or PNG, max 2MB</p>
+              <p className="text-[var(--th-muted)] text-xs">JPG or PNG, max 2MB</p>
             </div>
           </div>
           <input
@@ -195,7 +195,7 @@ export default function SettingsClient({
         <section className="space-y-1">
           <label
             htmlFor="displayName"
-            className="text-xs tracking-widest uppercase text-[#4a5e4c]"
+            className="text-xs tracking-widest uppercase text-[var(--th-muted)]"
           >
             Display name
           </label>
@@ -206,23 +206,23 @@ export default function SettingsClient({
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="What should your companions call you?"
             maxLength={60}
-            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-base sm:text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors"
+            className="w-full px-4 py-3 rounded-md bg-[var(--th-surface)] border border-[var(--th-border)] text-[var(--th-text)] placeholder-[var(--th-muted)] text-base sm:text-sm focus:outline-none focus:border-[var(--th-accent)] transition-colors"
           />
         </section>
 
         {/* Divider */}
-        <div className="border-t border-[#2a3a2c]" />
+        <div className="border-t border-[var(--th-border)]" />
 
         {/* OpenRouter API key */}
         <section className="space-y-1">
           <label
             htmlFor="apiKey"
-            className="text-xs tracking-widest uppercase text-[#4a5e4c]"
+            className="text-xs tracking-widest uppercase text-[var(--th-muted)]"
           >
             OpenRouter API key
           </label>
           {hasApiKey && (
-            <p className="text-[#5e7d5a] text-xs">
+            <p className="text-[var(--th-accent)] text-xs">
               A key is already saved. Enter a new one below to replace it.
             </p>
           )}
@@ -232,9 +232,9 @@ export default function SettingsClient({
             value={apiKeyInput}
             onChange={(e) => setApiKeyInput(e.target.value)}
             placeholder={hasApiKey ? "Leave blank to keep current key" : "sk-or-…"}
-            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-base sm:text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors font-mono"
+            className="w-full px-4 py-3 rounded-md bg-[var(--th-surface)] border border-[var(--th-border)] text-[var(--th-text)] placeholder-[var(--th-muted)] text-base sm:text-sm focus:outline-none focus:border-[var(--th-accent)] transition-colors font-mono"
           />
-          <p className="text-[#4a5e4c] text-xs">
+          <p className="text-[var(--th-muted)] text-xs">
             Encrypted before storage. Never visible after saving.
           </p>
         </section>
@@ -243,7 +243,7 @@ export default function SettingsClient({
         <section className="space-y-1">
           <label
             htmlFor="model"
-            className="text-xs tracking-widest uppercase text-[#4a5e4c]"
+            className="text-xs tracking-widest uppercase text-[var(--th-muted)]"
           >
             Chat model
           </label>
@@ -251,7 +251,7 @@ export default function SettingsClient({
             id="model"
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] text-base sm:text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors appearance-none"
+            className="w-full px-4 py-3 rounded-md bg-[var(--th-surface)] border border-[var(--th-border)] text-[var(--th-text)] text-base sm:text-sm focus:outline-none focus:border-[var(--th-accent)] transition-colors appearance-none"
           >
             {MODELS.map((m) => (
               <option key={m.value} value={m.value}>
@@ -266,7 +266,7 @@ export default function SettingsClient({
         <button
           type="submit"
           disabled={saving || uploadingAvatar}
-          className="w-full py-3 rounded-md bg-[#2a3a2c] hover:bg-[#3a4e3c] text-[#d6e4d2] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 rounded-md bg-[var(--th-border)] hover:bg-[var(--th-surface-hover)] text-[var(--th-text)] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "Saving…" : saved ? "Saved" : "Save settings"}
         </button>
