@@ -362,9 +362,21 @@ export async function POST(request: Request) {
         if (data && data !== "[DONE]") {
           try {
             const json = JSON.parse(data);
-            if (!json.error) {
+            const finishReason = json.choices?.[0]?.finish_reason;
+            if (!json.error && finishReason !== "error") {
               const delta = json.choices?.[0]?.delta?.content ?? "";
               fullContent += delta;
+            } else if (json.error || finishReason === "error") {
+              fullContent = "";
+              const clientMsg = "Stream interrupted — please try again.";
+              console.error("[brat.gg] Stream tail error:", json.error ?? finishReason);
+              try {
+                await writer.write(
+                  encoder.encode(`event: bratgg_error\ndata: ${JSON.stringify({ message: clientMsg })}\n\n`)
+                );
+              } catch {
+                // writer may already be in an error state; best-effort only
+              }
             }
           } catch {
             // skip malformed
