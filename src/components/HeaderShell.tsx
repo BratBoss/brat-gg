@@ -10,7 +10,7 @@ export default function HeaderShell({
   right?: ReactNode;
 }) {
   return (
-    <header className="border-b border-[#2a3a2c] px-6 py-4">
+    <header className="border-b border-[var(--th-border)] px-6 py-4">
       {/* Mobile (<sm): brand + auth on one line, nav below */}
       <div className="sm:hidden">
         <div className="flex items-center min-h-[24px]">

@@ -36,7 +36,7 @@ export default async function GladePage({
       {/* About */}
       <section className="flex flex-col sm:flex-row gap-8 items-start">
         {/* Portrait */}
-        <div className="relative w-48 h-64 shrink-0 rounded-md overflow-hidden border border-[#2a3a2c] bg-[#161d17] sm:mt-2">
+        <div className="relative w-48 h-64 shrink-0 rounded-md overflow-hidden border border-[var(--th-border)] bg-[var(--th-surface)] sm:mt-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={brat.portrait}
@@ -47,18 +47,18 @@ export default async function GladePage({
 
         {/* Text */}
         <div className="flex flex-col justify-center gap-3 pt-2">
-          <h1 className="text-2xl font-light text-[#d6e4d2] tracking-tight">
+          <h1 className="text-2xl font-light text-[var(--th-text)] tracking-tight">
             {brat.name}
           </h1>
-          <p className="text-[#5e7d5a] text-xs tracking-widest uppercase">
+          <p className="text-[var(--th-accent)] text-xs tracking-widest uppercase">
             {about.tagline}
           </p>
-          <p className="text-[#8aaa8c] text-sm leading-relaxed whitespace-pre-line">
+          <p className="text-[var(--th-dim)] text-sm leading-relaxed whitespace-pre-line">
             {about.bio}
           </p>
           <Link
             href={`/brats/${slug}/chat`}
-            className="mt-2 self-start px-4 py-2 rounded-md bg-[#2a3a2c] hover:bg-[#3a4e3c] text-[#d6e4d2] text-sm transition-colors"
+            className="mt-2 self-start px-4 py-2 rounded-md bg-[var(--th-border)] hover:bg-[var(--th-surface-hover)] text-[var(--th-text)] text-sm transition-colors"
           >
             Open chat
           </Link>
@@ -69,12 +69,12 @@ export default async function GladePage({
       {recentEntries.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-xs tracking-widest uppercase text-[#4a5e4c]">
+            <h2 className="text-xs tracking-widest uppercase text-[var(--th-muted)]">
               Recent journal
             </h2>
             <Link
               href={`/brats/${slug}/journal`}
-              className="text-xs text-[#4a5e4c] hover:text-[#8aaa8c] transition-colors"
+              className="text-xs text-[var(--th-muted)] hover:text-[var(--th-dim)] transition-colors"
             >
               All entries →
             </Link>
@@ -84,17 +84,17 @@ export default async function GladePage({
             {recentEntries.map((entry) => (
               <div
                 key={entry.id}
-                className="rounded-md border border-[#2a3a2c] bg-[#161d17] px-5 py-4"
+                className="rounded-md border border-[var(--th-border)] bg-[var(--th-surface)] px-5 py-4"
               >
                 <div className="flex items-baseline justify-between mb-2">
-                  <p className="text-[#d6e4d2] text-sm font-medium">
+                  <p className="text-[var(--th-text)] text-sm font-medium">
                     {entry.title}
                   </p>
-                  <time className="text-[#4a5e4c] text-xs ml-4 shrink-0">
+                  <time className="text-[var(--th-muted)] text-xs ml-4 shrink-0">
                     {formatDate(entry.date)}
                   </time>
                 </div>
-                <p className="text-[#6b8a6e] text-sm leading-relaxed">
+                <p className="text-[var(--th-subtle)] text-sm leading-relaxed">
                   {entry.excerpt}
                 </p>
               </div>

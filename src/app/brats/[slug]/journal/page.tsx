@@ -30,10 +30,10 @@ export default async function JournalPage({
   return (
     <main className="max-w-2xl mx-auto px-6 py-14">
       <div className="mb-10">
-        <h1 className="text-2xl font-light text-[#d6e4d2] tracking-tight mb-1">
+        <h1 className="text-2xl font-light text-[var(--th-text)] tracking-tight mb-1">
           Journal
         </h1>
-        <p className="text-[#6b8a6e] text-sm">
+        <p className="text-[var(--th-subtle)] text-sm">
           {brat.name}&apos;s thoughts, written down.
         </p>
       </div>
@@ -42,22 +42,22 @@ export default async function JournalPage({
         {journalEntries.map((entry) => (
           <article
             key={entry.id}
-            className="border-b border-[#2a3a2c] pb-8 last:border-0"
+            className="border-b border-[var(--th-border)] pb-8 last:border-0"
           >
             <div className="flex items-baseline justify-between mb-3">
-              <h2 className="text-[#d6e4d2] text-base font-medium">
+              <h2 className="text-[var(--th-text)] text-base font-medium">
                 {entry.title}
               </h2>
-              <time className="text-[#4a5e4c] text-xs ml-4 shrink-0">
+              <time className="text-[var(--th-muted)] text-xs ml-4 shrink-0">
                 {formatDate(entry.date)}
               </time>
             </div>
-            <div className="text-[#8aaa8c] text-sm leading-relaxed whitespace-pre-line">
+            <div className="text-[var(--th-dim)] text-sm leading-relaxed whitespace-pre-line">
               {entry.body}
             </div>
             {entry.status && (
-              <p className="mt-4 text-[#8aaa8c] text-sm leading-relaxed">
-                <span className="text-[#6b8a6e] font-medium">Status:</span>{" "}
+              <p className="mt-4 text-[var(--th-dim)] text-sm leading-relaxed">
+                <span className="text-[var(--th-subtle)] font-medium">Status:</span>{" "}
                 {entry.status}
               </p>
             )}
