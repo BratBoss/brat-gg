@@ -133,22 +133,21 @@ export default function SettingsClient({
   }
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-14 md:py-16">
-      <div className="mb-12">
+    <main className="max-w-5xl mx-auto px-6 py-8 md:py-10">
+      <div className="mb-8 md:mb-10">
         <h1 className="text-2xl font-light text-[#d6e4d2] tracking-tight mb-1">
           Settings
         </h1>
         <p className="text-[#6b8a6e] text-sm">Your profile and preferences.</p>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-10">
-        {/* Avatar */}
-        <section className="space-y-4 rounded-lg border border-[#2a3a2c] bg-[#111711] p-5 md:p-6">
+      <form onSubmit={handleSave} className="space-y-6">
+        <section className="rounded-lg border border-[#2a3a2c] bg-[#121812] px-5 py-5 md:px-6 md:py-6">
           <label className="text-xs tracking-widest uppercase text-[#4a5e4c]">
             Avatar
           </label>
-          <div className="flex items-center gap-5">
-            <div className="relative w-16 h-16 rounded-full overflow-hidden border border-[#2a3a2c] bg-[#161d17] shrink-0">
+          <div className="mt-4 flex items-center gap-5 md:gap-6">
+            <div className="relative w-20 h-20 rounded-full overflow-hidden border border-[#2a3a2c] bg-[#161d17] shrink-0">
               {avatarDisplayUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -157,18 +156,18 @@ export default function SettingsClient({
                   className="absolute inset-0 h-full w-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[#4a5e4c] text-sm">
+                <div className="w-full h-full flex items-center justify-center text-[#4a5e4c] text-lg">
                   {displayName?.[0]?.toUpperCase() ?? "?"}
                 </div>
               )}
             </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-3">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingAvatar}
-                  className="text-sm text-[#6b8a6e] hover:text-[#d6e4d2] transition-colors disabled:opacity-40"
+                  className="text-sm text-[#8aaa8c] hover:text-[#d6e4d2] transition-colors disabled:opacity-40"
                 >
                   {uploadingAvatar ? "Uploading…" : "Change avatar"}
                 </button>
@@ -195,27 +194,48 @@ export default function SettingsClient({
           />
         </section>
 
-        {/* Display name */}
-        <section className="space-y-2 rounded-lg border border-[#2a3a2c] bg-[#111711] p-5 md:p-6">
-          <label
-            htmlFor="displayName"
-            className="text-xs tracking-widest uppercase text-[#4a5e4c]"
-          >
-            Display name
-          </label>
-          <input
-            id="displayName"
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="What should your companions call you?"
-            maxLength={60}
-            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors"
-          />
-        </section>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <section className="rounded-lg border border-[#2a3a2c] bg-[#121812] px-5 py-5 md:px-6 md:py-6">
+            <label
+              htmlFor="displayName"
+              className="text-xs tracking-widest uppercase text-[#4a5e4c]"
+            >
+              Display name
+            </label>
+            <input
+              id="displayName"
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="What should your companions call you?"
+              maxLength={60}
+              className="mt-3 w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors"
+            />
+          </section>
 
-        {/* OpenRouter API key */}
-        <section className="space-y-2 rounded-lg border border-[#2a3a2c] bg-[#111711] p-5 md:p-6">
+          <section className="rounded-lg border border-[#2a3a2c] bg-[#121812] px-5 py-5 md:px-6 md:py-6">
+            <label
+              htmlFor="model"
+              className="text-xs tracking-widest uppercase text-[#4a5e4c]"
+            >
+              Chat model
+            </label>
+            <select
+              id="model"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className="mt-3 w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors appearance-none"
+            >
+              {MODELS.map((m) => (
+                <option key={m.value} value={m.value}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </section>
+        </div>
+
+        <section className="rounded-lg border border-[#2a3a2c] bg-[#121812] px-5 py-5 md:px-6 md:py-6">
           <label
             htmlFor="apiKey"
             className="text-xs tracking-widest uppercase text-[#4a5e4c]"
@@ -223,7 +243,7 @@ export default function SettingsClient({
             OpenRouter API key
           </label>
           {hasApiKey && (
-            <p className="text-[#5e7d5a] text-xs">
+            <p className="mt-2 text-[#5e7d5a] text-xs">
               A key is already saved. Enter a new one below to replace it.
             </p>
           )}
@@ -233,44 +253,24 @@ export default function SettingsClient({
             value={apiKeyInput}
             onChange={(e) => setApiKeyInput(e.target.value)}
             placeholder={hasApiKey ? "Leave blank to keep current key" : "sk-or-…"}
-            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors font-mono"
+            className="mt-3 w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors font-mono"
           />
-          <p className="text-[#4a5e4c] text-xs">
+          <p className="mt-2 text-[#4a5e4c] text-xs">
             Encrypted before storage. Never visible after saving.
           </p>
         </section>
 
-        {/* Model */}
-        <section className="space-y-2 rounded-lg border border-[#2a3a2c] bg-[#111711] p-5 md:p-6">
-          <label
-            htmlFor="model"
-            className="text-xs tracking-widest uppercase text-[#4a5e4c]"
-          >
-            Chat model
-          </label>
-          <select
-            id="model"
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors appearance-none"
-          >
-            {MODELS.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </section>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-1">
+          {error ? <p className="text-red-400/80 text-sm">{error}</p> : <div />}
 
-        {error && <p className="text-red-400/80 text-sm">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={saving || uploadingAvatar}
-          className="w-full md:w-auto md:min-w-[220px] py-3 px-6 rounded-md bg-[#2a3a2c] hover:bg-[#3a4e3c] text-[#d6e4d2] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? "Saving…" : saved ? "Saved" : "Save settings"}
-        </button>
+          <button
+            type="submit"
+            disabled={saving || uploadingAvatar}
+            className="w-full sm:w-auto sm:min-w-[220px] py-3 px-6 rounded-md bg-[#2a3a2c] hover:bg-[#3a4e3c] text-[#d6e4d2] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? "Saving…" : saved ? "Saved" : "Save settings"}
+          </button>
+        </div>
       </form>
     </main>
   );
