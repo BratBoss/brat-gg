@@ -1,19 +1,30 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getBratBySlug } from "@/content/brats";
 
-const navLinks = [
-  { label: "Glade", href: "/brats/aria" },
-  { label: "Journal", href: "/brats/aria/journal" },
-  { label: "Gallery", href: "/brats/aria/gallery" },
-  { label: "Chat", href: "/brats/aria/chat" },
-  { label: "Settings", href: "/brats/aria/settings" },
-];
-
-export default async function AriaLayout({
+export default async function BratLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ slug: string }>;
 }) {
+  const { slug } = await params;
+  const brat = getBratBySlug(slug);
+
+  if (!brat || !brat.available) {
+    notFound();
+  }
+
+  const navLinks = [
+    { label: brat.section ?? brat.name, href: `/brats/${slug}` },
+    { label: "Journal", href: `/brats/${slug}/journal` },
+    { label: "Gallery", href: `/brats/${slug}/gallery` },
+    { label: "Chat", href: `/brats/${slug}/chat` },
+    { label: "Settings", href: `/brats/${slug}/settings` },
+  ];
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -49,7 +60,7 @@ export default async function AriaLayout({
         {/* Auth state */}
         <div className="flex items-center gap-3 text-sm ml-auto">
           {user ? (
-            <AuthedUser />
+            <SignOutButton />
           ) : (
             <Link
               href="/login"
@@ -63,21 +74,6 @@ export default async function AriaLayout({
 
       {/* Page content */}
       <div className="flex-1">{children}</div>
-    </div>
-  );
-}
-
-async function AuthedUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return null;
-
-  return (
-    <div className="flex items-center gap-3">
-      <SignOutButton />
     </div>
   );
 }

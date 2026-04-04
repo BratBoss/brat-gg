@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://brat.gg"),
   title: "brat.gg",
   description: "A quiet home for digital companions.",
   manifest: "/site.webmanifest",

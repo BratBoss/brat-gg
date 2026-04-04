@@ -1,15 +1,32 @@
-export const metadata = {
-  title: "Gallery — Aria | brat.gg",
-};
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { getBratBySlug } from "@/content/brats";
+import { getBratGallery } from "@/content/brats/gallery";
 
-const galleryImages = [
-  { src: "/images/aria/gallery/1.JPG", alt: "Aria — gallery 1" },
-  { src: "/images/aria/gallery/2.JPG", alt: "Aria — gallery 2" },
-  { src: "/images/aria/gallery/3.JPG", alt: "Aria — gallery 3" },
-  { src: "/images/aria/gallery/4.JPG", alt: "Aria — gallery 4" },
-];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const brat = getBratBySlug(slug);
+  if (!brat || !brat.available) return {};
+  return { title: `Gallery — ${brat.name} | brat.gg` };
+}
 
-export default function GalleryPage() {
+export default async function GalleryPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const brat = getBratBySlug(slug);
+
+  if (!brat || !brat.available) notFound();
+
+  const images = getBratGallery(slug);
+  if (!images) notFound();
+
   return (
     <main className="max-w-5xl mx-auto px-6 py-14">
       <div className="mb-10">
@@ -20,7 +37,7 @@ export default function GalleryPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        {galleryImages.map((img, i) => (
+        {images.map((img, i) => (
           <a
             key={i}
             href={img.src}

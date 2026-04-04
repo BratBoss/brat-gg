@@ -1,24 +1,41 @@
 import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { decryptMessage } from "@/lib/crypto";
 import { getBratBySlug } from "@/content/brats";
 import ChatClient from "@/components/chat/ChatClient";
 
-// Single registry reference — all brat-specific strings come from here.
-const BRAT = getBratBySlug("aria")!;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const brat = getBratBySlug(slug);
+  if (!brat || !brat.available) return {};
+  return { title: `Chat — ${brat.name} | brat.gg` };
+}
 
-export const metadata = {
-  title: `Chat — ${BRAT.name} | brat.gg`,
-};
+export default async function ChatPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const brat = getBratBySlug(slug);
 
-export default async function ChatPage() {
+  if (!brat || !brat.available) {
+    notFound();
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?next=/brats/${BRAT.slug}/chat`);
+    redirect(`/login?next=/brats/${slug}/chat`);
   }
 
   // Run in parallel: profile data (no key blob) + key existence check.
@@ -45,7 +62,7 @@ export default async function ChatPage() {
     avatarDisplayUrl = signed?.signedUrl ?? null;
   }
 
-  const session = await getOrCreateSession(supabase, user.id, BRAT.slug);
+  const session = await getOrCreateSession(supabase, user.id, slug);
 
   const { data: rawMessages } = await supabase
     .from("messages")
@@ -69,10 +86,10 @@ export default async function ChatPage() {
         model: profile?.openrouter_model ?? "x-ai/grok-4.1-fast",
       }}
       brat={{
-        name: BRAT.name,
-        portrait: BRAT.portrait,
-        section: BRAT.section,
-        settingsHref: `/brats/${BRAT.slug}/settings`,
+        name: brat.name,
+        portrait: brat.portrait,
+        section: brat.section,
+        settingsHref: `/brats/${slug}/settings`,
       }}
     />
   );
