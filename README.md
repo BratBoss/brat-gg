@@ -9,16 +9,33 @@ V1 ships one companion: Aria.
 ## V1 product scope
 
 **In scope:**
-- Magic-link auth (passwordless, email + OAuth GitHub via Supabase)
-- Per-user chat with Aria, with conversation history stored encrypted at rest
-- Streaming responses via OpenRouter (user-supplied API key)
-- User settings: display name, avatar, API key, model selection
-- Private avatar storage (Supabase Storage, signed URLs)
-- Aria's journal and gallery pages (static content)
+- Passwordless auth via Supabase:
+  - magic-link email login
+  - GitHub OAuth login
+- One persistent private chat session per user per brat
+- Encrypted-at-rest conversation storage:
+  - user/assistant messages
+  - per-session history summaries
+- Streaming chat responses via OpenRouter using each user's own API key (BYOK)
+- Global user settings:
+  - display name
+  - avatar
+  - OpenRouter API key
+  - model selection
+- Private avatar storage via Supabase Storage with signed URL access
+- Dynamic brat route infrastructure under `/brats/[slug]`
+- One fully implemented companion experience for Aria:
+  - glade/profile page
+  - journal
+  - gallery
+  - chat
+- Mobile-friendly responsive layout and input behavior
+- Row Level Security on user data in Supabase
 
 **Out of scope / deferred:**
-- Multiple active chat sessions per user
-- Additional companions (Marcy, Sylvie)
+- Additional active companions beyond Aria (for example Marcy and Sylvie)
+- Registered content + prompts for future companions
+- More advanced per-user crypto isolation / key hierarchy for messages, summaries, and stored API keys
 
 ---
 
