@@ -26,7 +26,7 @@ export default function HomePage() {
             <span className="relative px-0 py-1.5 text-sm text-[#6b8a6e]">Settings</span>
           </div>
         }
-        right={<AuthStatus />}
+        right={<AuthStatus loginHref="/login?brat=home" />}
       />
 
       {/* Hero */}

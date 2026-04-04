@@ -19,7 +19,7 @@ export default async function BratHeader({ brat }: { brat: BratMeta }) {
         </Link>
       }
       center={<BratNav links={navLinks} bratSlug={brat.slug} />}
-      right={<AuthStatus />}
+      right={<AuthStatus loginHref={`/login?brat=${brat.slug}&next=${encodeURIComponent(`/brats/${brat.slug}/chat`)}`} />}
     />
   );
 }
