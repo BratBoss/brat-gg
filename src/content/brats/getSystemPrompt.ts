@@ -9,6 +9,7 @@
 // rather than silently falling back to any default companion.
 
 import { buildAriaSystemPrompt } from "@/content/aria/buildSystemPrompt";
+import { buildMarcySystemPrompt } from "@/content/marcy/buildSystemPrompt";
 
 /**
  * Parameters every companion prompt builder must accept.
@@ -28,6 +29,7 @@ export type PromptBuilder = (params: PromptBuilderParams) => string;
  */
 const PROMPT_BUILDERS: Record<string, PromptBuilder> = {
   aria: buildAriaSystemPrompt,
+  marcy: buildMarcySystemPrompt,
 };
 
 /**

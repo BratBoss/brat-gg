@@ -6,11 +6,13 @@
 // Add a new entry here once a companion has a gallery.ts.
 
 import { ariaGallery, type GalleryImage } from "@/content/aria/gallery";
+import { marcyGallery } from "@/content/marcy/gallery";
 
 export type { GalleryImage };
 
 const GALLERY_MAP: Record<string, GalleryImage[]> = {
   aria: ariaGallery,
+  marcy: marcyGallery,
 };
 
 /**

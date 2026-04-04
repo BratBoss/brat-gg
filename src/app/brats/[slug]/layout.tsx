@@ -17,7 +17,7 @@ export default async function BratLayout({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen min-h-0">
+    <div className="flex-1 flex flex-col min-h-screen min-h-0" data-brat={brat.slug}>
       <BratHeader brat={brat} />
       <div className="flex-1 min-h-0 flex flex-col">{children}</div>
     </div>

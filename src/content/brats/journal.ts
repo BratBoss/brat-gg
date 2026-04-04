@@ -6,6 +6,7 @@
 // Add a new entry here once a companion has a journal.json.
 
 import ariaJournal from "@/content/aria/journal.json";
+import marcyJournal from "@/content/marcy/journal.json";
 
 export type JournalEntry = {
   id: string;
@@ -18,6 +19,7 @@ export type JournalEntry = {
 
 const JOURNAL_MAP: Record<string, JournalEntry[]> = {
   aria: ariaJournal as JournalEntry[],
+  marcy: marcyJournal as JournalEntry[],
 };
 
 /**
