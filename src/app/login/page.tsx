@@ -23,7 +23,7 @@ function isSafeNextPath(next: string): boolean {
 }
 
 function buildCallbackUrl(next: string) {
-  const base = `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`;
+  const base = `${window.location.origin}/auth/callback`;
   const safePath = isSafeNextPath(next) ? next : "/";
   return safePath !== "/" ? `${base}?next=${encodeURIComponent(safePath)}` : base;
 }
