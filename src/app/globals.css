@@ -17,27 +17,8 @@
 }
 
 /* ── Semantic theme tokens ──────────────────────────────────────────────── */
-/* Default: Aria (forest/elven) */
+/* Default / root: Home (neutral threshold) */
 :root {
-  --th-bg:            #0f1410;
-  --th-surface:       #161d17;
-  --th-border:        #2a3a2c;
-  --th-muted:         #4a5e4c;
-  --th-subtle:        #6b8a6e;
-  --th-text:          #d6e4d2;
-  --th-dim:           #8aaa8c;
-  --th-soft:          #c4d8c0;
-  --th-accent:        #5e7d5a;
-  --th-accent-bright: #8fb88a;
-  --th-surface-hover: #3a4e3c;
-  --th-surface-nav:   #334534;
-
-  background-color: #0f1410;
-  color: #d6e4d2;
-}
-
-/* Home — neutral threshold between Aria and Marcy */
-[data-brat="home"] {
   --th-bg:            #141110;
   --th-surface:       #1c1715;
   --th-border:        #322824;
@@ -50,6 +31,25 @@
   --th-accent-bright: #c4a98c;
   --th-surface-hover: #433630;
   --th-surface-nav:   #3d2e2a;
+
+  background-color: #141110;
+  color: #e6d8cf;
+}
+
+/* Aria — forest/elven */
+[data-brat="aria"] {
+  --th-bg:            #0f1410;
+  --th-surface:       #161d17;
+  --th-border:        #2a3a2c;
+  --th-muted:         #4a5e4c;
+  --th-subtle:        #6b8a6e;
+  --th-text:          #d6e4d2;
+  --th-dim:           #8aaa8c;
+  --th-soft:          #c4d8c0;
+  --th-accent:        #5e7d5a;
+  --th-accent-bright: #8fb88a;
+  --th-surface-hover: #3a4e3c;
+  --th-surface-nav:   #334534;
 
   background-color: var(--th-bg);
 }
@@ -73,8 +73,8 @@
 }
 
 body {
-  background-color: #0f1410;
-  color: #d6e4d2;
+  background-color: #141110;
+  color: #e6d8cf;
   font-family: var(--font-geist-sans), Georgia, serif;
   -webkit-font-smoothing: antialiased;
 }
