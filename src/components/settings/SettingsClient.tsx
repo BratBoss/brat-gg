@@ -133,17 +133,17 @@ export default function SettingsClient({
   }
 
   return (
-    <main className="max-w-lg mx-auto px-6 py-14">
-      <div className="mb-10">
+    <main className="max-w-3xl mx-auto px-6 py-14 md:py-16">
+      <div className="mb-12">
         <h1 className="text-2xl font-light text-[#d6e4d2] tracking-tight mb-1">
           Settings
         </h1>
         <p className="text-[#6b8a6e] text-sm">Your profile and preferences.</p>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-8">
+      <form onSubmit={handleSave} className="space-y-10">
         {/* Avatar */}
-        <section className="space-y-3">
+        <section className="space-y-4 rounded-lg border border-[#2a3a2c] bg-[#111711] p-5 md:p-6">
           <label className="text-xs tracking-widest uppercase text-[#4a5e4c]">
             Avatar
           </label>
@@ -196,7 +196,7 @@ export default function SettingsClient({
         </section>
 
         {/* Display name */}
-        <section className="space-y-2">
+        <section className="space-y-2 rounded-lg border border-[#2a3a2c] bg-[#111711] p-5 md:p-6">
           <label
             htmlFor="displayName"
             className="text-xs tracking-widest uppercase text-[#4a5e4c]"
@@ -214,11 +214,8 @@ export default function SettingsClient({
           />
         </section>
 
-        {/* Divider */}
-        <div className="border-t border-[#2a3a2c]" />
-
         {/* OpenRouter API key */}
-        <section className="space-y-2">
+        <section className="space-y-2 rounded-lg border border-[#2a3a2c] bg-[#111711] p-5 md:p-6">
           <label
             htmlFor="apiKey"
             className="text-xs tracking-widest uppercase text-[#4a5e4c]"
@@ -244,7 +241,7 @@ export default function SettingsClient({
         </section>
 
         {/* Model */}
-        <section className="space-y-2">
+        <section className="space-y-2 rounded-lg border border-[#2a3a2c] bg-[#111711] p-5 md:p-6">
           <label
             htmlFor="model"
             className="text-xs tracking-widest uppercase text-[#4a5e4c]"
@@ -270,7 +267,7 @@ export default function SettingsClient({
         <button
           type="submit"
           disabled={saving || uploadingAvatar}
-          className="w-full py-3 rounded-md bg-[#2a3a2c] hover:bg-[#3a4e3c] text-[#d6e4d2] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full md:w-auto md:min-w-[220px] py-3 px-6 rounded-md bg-[#2a3a2c] hover:bg-[#3a4e3c] text-[#d6e4d2] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "Saving…" : saved ? "Saved" : "Save settings"}
         </button>
