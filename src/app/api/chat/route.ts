@@ -191,7 +191,8 @@ export async function POST(request: Request) {
   });
 
   // Raw context window: when a summary exists, start at (lastSummarizedCount - LIVE_WINDOW)
-  // so no messages fall between summary coverage and the live window.
+  // so no messages fall between summary coverage and the live window. Between refreshes the
+  // window grows by at most SUMMARY_TRIGGER_DELTA before the next refresh collapses it to ~LIVE_WINDOW.
   // Without a summary, fall back to HISTORY_CONTEXT_LIMIT.
   let contextMessages: { role: string; content: string }[];
   if (historySummary) {
