@@ -12,7 +12,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const brat = getBratBySlug(slug);
-  if (!brat) return {};
+  if (!brat || !brat.available) return {};
   return { title: `${brat.section ?? brat.name} — ${brat.name} | brat.gg` };
 }
 
