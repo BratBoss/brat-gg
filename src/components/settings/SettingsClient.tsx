@@ -29,6 +29,7 @@ export default function SettingsClient({
   const [model, setModel] = useState(initialValues.openrouterModel);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [removingAvatar, setRemovingAvatar] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,6 +68,27 @@ export default function SettingsClient({
     setAvatarPath(path);
     setAvatarDisplayUrl(signed?.signedUrl ?? null);
     setUploadingAvatar(false);
+  }
+
+  async function handleRemoveAvatar() {
+    if (!avatarPath) return;
+    setRemovingAvatar(true);
+    setError(null);
+
+    const supabase = createClient();
+    const { error: removeError } = await supabase.storage
+      .from("avatars")
+      .remove([avatarPath]);
+
+    setRemovingAvatar(false);
+
+    if (removeError) {
+      setError("Failed to remove avatar: " + removeError.message);
+      return;
+    }
+
+    setAvatarPath(null);
+    setAvatarDisplayUrl(null);
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -138,16 +160,28 @@ export default function SettingsClient({
                 </div>
               )}
             </div>
-            <div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingAvatar}
-                className="text-sm text-[#6b8a6e] hover:text-[#d6e4d2] transition-colors disabled:opacity-40"
-              >
-                {uploadingAvatar ? "Uploading…" : "Change avatar"}
-              </button>
-              <p className="text-[#4a5e4c] text-xs mt-0.5">JPG or PNG, max 2MB</p>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar || removingAvatar}
+                  className="text-sm text-[#6b8a6e] hover:text-[#d6e4d2] transition-colors disabled:opacity-40"
+                >
+                  {uploadingAvatar ? "Uploading…" : "Change avatar"}
+                </button>
+                {avatarDisplayUrl && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    disabled={uploadingAvatar || removingAvatar}
+                    className="text-sm text-[#4a5e4c] hover:text-red-400/70 transition-colors disabled:opacity-40"
+                  >
+                    {removingAvatar ? "Removing…" : "Remove"}
+                  </button>
+                )}
+              </div>
+              <p className="text-[#4a5e4c] text-xs">JPG or PNG, max 2MB</p>
             </div>
           </div>
           <input
@@ -233,7 +267,7 @@ export default function SettingsClient({
 
         <button
           type="submit"
-          disabled={saving || uploadingAvatar}
+          disabled={saving || uploadingAvatar || removingAvatar}
           className="w-full py-3 rounded-md bg-[#2a3a2c] hover:bg-[#3a4e3c] text-[#d6e4d2] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "Saving…" : saved ? "Saved" : "Save settings"}

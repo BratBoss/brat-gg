@@ -165,7 +165,24 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        <Suspense>
+        <Suspense
+          fallback={
+            <div className="space-y-6">
+              <div>
+                <h1 className="text-2xl font-light text-[#d6e4d2] mb-2 text-center">
+                  Sign in
+                </h1>
+                <p className="text-[#6b8a6e] text-sm text-center">
+                  Enter your email and we will send you a magic link.
+                </p>
+              </div>
+              <div className="flex flex-col gap-4">
+                <div className="h-11 rounded-md bg-[#161d17] border border-[#2a3a2c] animate-pulse" />
+                <div className="h-11 rounded-md bg-[#2a3a2c] animate-pulse" />
+              </div>
+            </div>
+          }
+        >
           <LoginForm />
         </Suspense>
       </div>

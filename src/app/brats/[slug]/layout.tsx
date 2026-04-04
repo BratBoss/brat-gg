@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getBratBySlug } from "@/content/brats";
+import BratNav from "@/components/BratNav";
 
 export default async function BratLayout({
   children,
@@ -45,17 +46,7 @@ export default async function BratLayout({
         </div>
 
         {/* Section nav */}
-        <nav className="flex items-center gap-1 flex-wrap">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="px-3 py-1.5 text-sm text-[#6b8a6e] hover:text-[#d6e4d2] hover:bg-[#161d17] rounded-md transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        <BratNav links={navLinks} />
 
         {/* Auth state */}
         <div className="flex items-center gap-3 text-sm ml-auto">
