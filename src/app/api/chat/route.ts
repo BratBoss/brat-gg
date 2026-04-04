@@ -372,6 +372,11 @@ export async function POST(request: Request) {
         }
       }
     } catch (streamErr) {
+      // Discard any partial content accumulated before the error. The finally
+      // block gates persistence on `if (fullContent)`, so clearing it here
+      // prevents a partial assistant reply from being stored and later
+      // reappearing on reload or being included in summarization.
+      fullContent = "";
       // Surface stream errors to the client as a structured SSE event so the
       // browser can exit the spinner and show a user-friendly message rather
       // than hanging indefinitely or silently showing an empty bubble.
