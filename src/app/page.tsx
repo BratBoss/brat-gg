@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HeaderShell from "@/components/HeaderShell";
 import { BRATS, type BratMeta } from "@/content/brats";
 
 const brats = BRATS;
@@ -7,11 +8,15 @@ export default function HomePage() {
   return (
     <main className="flex-1 flex flex-col">
       {/* Header */}
-      <header className="border-b border-[#2a3a2c] px-6 py-4 flex items-center">
-        <span className="text-[#8aaa8c] text-sm tracking-widest uppercase">
-          brat.gg
-        </span>
-      </header>
+      <HeaderShell
+        left={
+          <span className="text-[#8aaa8c] text-sm tracking-widest uppercase">
+            brat.gg
+          </span>
+        }
+        center={<div />}
+        right={<div />}
+      />
 
       {/* Hero */}
       <section className="px-8 pt-16 pb-12 max-w-3xl">

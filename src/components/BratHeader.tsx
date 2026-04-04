@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import type { BratMeta } from "@/content/brats";
 import BratNav from "@/components/BratNav";
+import HeaderShell from "@/components/HeaderShell";
 import { buildBratNavLinks } from "@/lib/brat-nav";
 
 export default async function BratHeader({ brat }: { brat: BratMeta }) {
@@ -13,20 +14,18 @@ export default async function BratHeader({ brat }: { brat: BratMeta }) {
   } = await supabase.auth.getUser();
 
   return (
-    <header className="border-b border-[#2a3a2c] px-6 py-4 flex items-center justify-between gap-6 flex-wrap">
-      <div className="flex items-center text-sm">
+    <HeaderShell
+      left={
         <Link
           href="/"
           className="text-[#8aaa8c] text-sm tracking-widest uppercase hover:text-[#d6e4d2] transition-colors"
         >
           brat.gg
         </Link>
-      </div>
-
-      <BratNav links={navLinks} bratSlug={brat.slug} />
-
-      <div className="flex items-center gap-3 text-sm ml-auto">
-        {user ? (
+      }
+      center={<BratNav links={navLinks} bratSlug={brat.slug} />}
+      right={
+        user ? (
           <SignOutButton />
         ) : (
           <Link
@@ -35,9 +34,9 @@ export default async function BratHeader({ brat }: { brat: BratMeta }) {
           >
             Sign in
           </Link>
-        )}
-      </div>
-    </header>
+        )
+      }
+    />
   );
 }
 
