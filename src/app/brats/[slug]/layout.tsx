@@ -22,7 +22,7 @@ export default async function BratLayout({
     { label: "Journal", href: `/brats/${slug}/journal` },
     { label: "Gallery", href: `/brats/${slug}/gallery` },
     { label: "Chat", href: `/brats/${slug}/chat` },
-    { label: "Settings", href: `/brats/${slug}/settings` },
+    { label: "Settings", href: "/settings" },
   ];
 
   const supabase = await createClient();
