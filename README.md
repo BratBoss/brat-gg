@@ -1,6 +1,6 @@
 # brat.gg
 
-A small, personal website for AI companions. Each companion ("brat") has their own space: a profile page, journal, gallery, and one-on-one chat. brat.gg is a **bring-your-own-key (BYOK)** product — users supply their own OpenRouter API keys. The site does not use any shared or site-managed provider key; each request is made with the individual user's own key, stored encrypted at rest.
+A small, personal website for AI companions. Each companion (“brat”) has their own space — a profile, journal, gallery, and private one-on-one chat — with user accounts, saved settings, and conversation history.
 
 V1 ships one companion: Aria.
 
@@ -33,8 +33,7 @@ V1 ships one companion: Aria.
 - Row Level Security on user data in Supabase
 
 **Out of scope / deferred:**
-- Additional active companions beyond Aria (for example Marcy and Sylvie)
-- Registered content + prompts for future companions
+- Additional active companions beyond Aria (Marcy and Sylvie)
 - More advanced per-user crypto isolation / key hierarchy for messages, summaries, and stored API keys
 
 ---
@@ -305,28 +304,22 @@ Browser
 
 These rules exist for security or architectural reasons. Do not change them without understanding the consequence.
 
-**1. No site-managed API keys.**
-brat.gg is BYOK by design. The server never calls OpenRouter with a site credential. Do not add a fallback key, a free-tier key, or any server-side provider credential.
+**1. No crypto-key fallbacks.**
+`src/lib/crypto.ts` throws `ConfigError` if either `ENCRYPTION_SECRET` or `MESSAGE_ENCRYPTION_KEY` is absent or not exactly 64 hex characters. There are no dev/test fallbacks. This is intentional: silent crypto degradation is worse than a startup failure. Message content and history summaries are expected to be stored only in the encrypted format
 
-**2. No ENCRYPTION_SECRET fallback.**
-`src/lib/crypto.ts` throws `ConfigError` if `ENCRYPTION_SECRET` is absent or not exactly 64 hex characters. There is no dev/test fallback. This is intentional: silent crypto degradation is worse than a startup failure.
-
-**3. No MESSAGE_ENCRYPTION_KEY fallback.**
-`src/lib/crypto.ts` throws `ConfigError` if `MESSAGE_ENCRYPTION_KEY` is absent or not exactly 64 hex characters. There is no dev/test fallback. Message content and history summaries are also expected to be stored only in the encrypted format; plaintext compatibility is not part of the supported invariant.
-
-**4. Never return the encrypted key blob to the client.**
+**2. Never return the encrypted key blob to the client.**
 The `openrouter_api_key` column must not appear in any query that is serialized into a server component or API response. Use the HEAD-only count pattern when you only need to know if a key exists.
 
-**5. `profiles.avatar_url` stores a storage path, not a URL.**
+**3. `profiles.avatar_url` stores a storage path, not a URL.**
 The avatars bucket is private. Server components generate signed URLs (`createSignedUrl`) with a short TTL for display. Do not store public URLs, do not make the bucket public.
 
-**6. Each companion's `system-prompt.md` is the single source of truth for that companion's prompt.**
+**4. Each companion's `system-prompt.md` is the single source of truth for that companion's prompt.**
 The companion's `buildSystemPrompt.ts` reads the file; it does not contain a copy. Do not paste prompt text back into the `.ts` file. All companion prompt files are bundled into the Vercel lambda via the `./src/content/*/system-prompt.md` glob in `outputFileTracingIncludes` (`next.config.ts`) — do not remove that config entry.
 
-**7. RLS is the primary data isolation boundary.**
+**5. RLS is the primary data isolation boundary.**
 Row Level Security is enabled on `profiles`, `chat_sessions`, and `messages`. The API routes also verify ownership explicitly (belt-and-suspenders), but RLS is the authoritative gate. Do not disable RLS to work around a query issue.
 
-**8. `src/proxy.ts` must call `supabase.auth.getUser()`.**
+**6. `src/proxy.ts` must call `supabase.auth.getUser()`.**
 This is required by `@supabase/ssr` to keep session cookies fresh. Removing or skipping this call breaks SSR auth. The comment in the file is there for a reason.
 
 ---
