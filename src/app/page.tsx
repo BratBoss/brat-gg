@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <main className="flex-1 flex flex-col">
       {/* Header */}
-      <header className="px-8 py-6 border-b border-[#2a3a2c]">
+      <header className="border-b border-[#2a3a2c] px-6 py-4 flex items-center">
         <span className="text-[#8aaa8c] text-sm tracking-widest uppercase">
           brat.gg
         </span>
