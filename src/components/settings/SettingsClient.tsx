@@ -29,10 +29,12 @@ export default function SettingsClient({
   const [model, setModel] = useState(initialValues.openrouterModel);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [removingAvatar, setRemovingAvatar] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Tracks a storage path that should be deleted when Save succeeds.
+  // Set on Remove; cleared on successful Save or if the user re-uploads over it.
+  const pendingAvatarRemoval = useRef<string | null>(null);
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -65,28 +67,18 @@ export default function SettingsClient({
       .from("avatars")
       .createSignedUrl(path, 3600);
 
+    // If the user had a pending removal and is now uploading a new avatar,
+    // the old file is either already gone or will be overwritten (upsert).
+    pendingAvatarRemoval.current = null;
     setAvatarPath(path);
     setAvatarDisplayUrl(signed?.signedUrl ?? null);
     setUploadingAvatar(false);
   }
 
-  async function handleRemoveAvatar() {
+  function handleRemoveAvatar() {
     if (!avatarPath) return;
-    setRemovingAvatar(true);
-    setError(null);
-
-    const supabase = createClient();
-    const { error: removeError } = await supabase.storage
-      .from("avatars")
-      .remove([avatarPath]);
-
-    setRemovingAvatar(false);
-
-    if (removeError) {
-      setError("Failed to remove avatar: " + removeError.message);
-      return;
-    }
-
+    // Stash the path for deletion at Save time; do not touch storage yet.
+    pendingAvatarRemoval.current = avatarPath;
     setAvatarPath(null);
     setAvatarDisplayUrl(null);
   }
@@ -121,6 +113,12 @@ export default function SettingsClient({
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Failed to save settings.");
     } else {
+      // DB is consistent — now safe to delete the old file from storage.
+      if (pendingAvatarRemoval.current) {
+        const supabase = createClient();
+        await supabase.storage.from("avatars").remove([pendingAvatarRemoval.current]);
+        pendingAvatarRemoval.current = null;
+      }
       setSaved(true);
       if (apiKeyInput.trim() !== "") {
         setHasApiKey(true);
@@ -165,7 +163,7 @@ export default function SettingsClient({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingAvatar || removingAvatar}
+                  disabled={uploadingAvatar}
                   className="text-sm text-[#6b8a6e] hover:text-[#d6e4d2] transition-colors disabled:opacity-40"
                 >
                   {uploadingAvatar ? "Uploading…" : "Change avatar"}
@@ -174,10 +172,10 @@ export default function SettingsClient({
                   <button
                     type="button"
                     onClick={handleRemoveAvatar}
-                    disabled={uploadingAvatar || removingAvatar}
+                    disabled={uploadingAvatar}
                     className="text-sm text-[#4a5e4c] hover:text-red-400/70 transition-colors disabled:opacity-40"
                   >
-                    {removingAvatar ? "Removing…" : "Remove"}
+                    Remove
                   </button>
                 )}
               </div>
@@ -267,7 +265,7 @@ export default function SettingsClient({
 
         <button
           type="submit"
-          disabled={saving || uploadingAvatar || removingAvatar}
+          disabled={saving || uploadingAvatar}
           className="w-full py-3 rounded-md bg-[#2a3a2c] hover:bg-[#3a4e3c] text-[#d6e4d2] text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "Saving…" : saved ? "Saved" : "Save settings"}
