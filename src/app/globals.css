@@ -37,16 +37,17 @@ body {
 }
 
 /* Marcy — warm dorm theme overrides */
-[data-brat="marcy"] .border-\[\#2a3a2c\] { border-color: #3d2a18; }
-[data-brat="marcy"] .bg-\[\#161d17\]     { background-color: #1a1410; }
-[data-brat="marcy"] .bg-\[\#2a3a2c\]     { background-color: #3d2a18; }
-[data-brat="marcy"] .hover\:bg-\[\#3a4e3c\]:hover { background-color: #503520; }
-[data-brat="marcy"] .text-\[\#5e7d5a\]   { color: #8a6230; }
-[data-brat="marcy"] .text-\[\#4a5e4c\]   { color: #7a5228; }
-[data-brat="marcy"] .text-\[\#6b8a6e\]   { color: #a07040; }
-[data-brat="marcy"] .text-\[\#8aaa8c\]   { color: #c09060; }
-[data-brat="marcy"] .text-\[\#8fb88a\]   { color: #c8965c; }
-[data-brat="marcy"] .text-\[\#d6e4d2\]   { color: #f0e0c8; }
+[data-brat="marcy"] { background-color: #241911; }
+[data-brat="marcy"] .border-\[\#2a3a2c\] { border-color: #4a3220; }
+[data-brat="marcy"] .bg-\[\#161d17\]     { background-color: #2b1f17; }
+[data-brat="marcy"] .bg-\[\#2a3a2c\]     { background-color: #4a3220; }
+[data-brat="marcy"] .hover\:bg-\[\#3a4e3c\]:hover { background-color: #5c3d28; }
+[data-brat="marcy"] .text-\[\#5e7d5a\]   { color: #9c7142; }
+[data-brat="marcy"] .text-\[\#4a5e4c\]   { color: #87603a; }
+[data-brat="marcy"] .text-\[\#6b8a6e\]   { color: #b38452; }
+[data-brat="marcy"] .text-\[\#8aaa8c\]   { color: #d0a272; }
+[data-brat="marcy"] .text-\[\#8fb88a\]   { color: #d9a86f; }
+[data-brat="marcy"] .text-\[\#d6e4d2\]   { color: #f2e2cb; }
 
 /* Subtle scrollbar */
 ::-webkit-scrollbar {

@@ -50,7 +50,7 @@ export default async function SettingsPage({
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen">
+    <div className="flex-1 flex flex-col min-h-screen" data-brat={brat.slug}>
       <BratHeader brat={brat} />
       <SettingsClient
         userId={user.id}
