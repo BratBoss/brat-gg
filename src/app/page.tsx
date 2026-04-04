@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AuthStatus from "@/components/AuthStatus";
 import HeaderShell from "@/components/HeaderShell";
 import { BRATS, type BratMeta } from "@/content/brats";
 
@@ -14,8 +15,18 @@ export default function HomePage() {
             brat.gg
           </span>
         }
-        center={<div />}
-        right={<div />}
+        center={
+          <div className="flex items-center gap-5 flex-wrap opacity-0 pointer-events-none select-none" aria-hidden="true">
+            <span className="relative px-0 py-1.5 text-sm text-[#d6e4d2] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-[#5e7d5a]">
+              Glade
+            </span>
+            <span className="relative px-0 py-1.5 text-sm text-[#6b8a6e]">Journal</span>
+            <span className="relative px-0 py-1.5 text-sm text-[#6b8a6e]">Gallery</span>
+            <span className="relative px-0 py-1.5 text-sm text-[#6b8a6e]">Chat</span>
+            <span className="relative px-0 py-1.5 text-sm text-[#6b8a6e]">Settings</span>
+          </div>
+        }
+        right={<AuthStatus />}
       />
 
       {/* Hero */}
