@@ -49,16 +49,18 @@ src/
 ├── app/
 │   ├── layout.tsx                  # Root layout
 │   ├── page.tsx                    # Home (/)
-│   ├── login/page.tsx              # Magic link login
+│   ├── favicon.ico                 # App Router favicon
+│   ├── globals.css                 # Global styles
+│   ├── login/page.tsx              # Magic link / OAuth login
+│   ├── settings/page.tsx           # Global user settings page
 │   ├── auth/callback/route.ts      # Supabase auth callback
 │   │
-│   ├── brats/aria/
-│   │   ├── page.tsx                # Aria profile overview
-│   │   ├── layout.tsx              # Aria section layout
+│   ├── brats/[slug]/
+│   │   ├── layout.tsx              # Shared brat section layout/header
+│   │   ├── page.tsx                # Brat profile / glade overview
 │   │   ├── chat/page.tsx           # Chat page (server component, loads session)
-│   │   ├── settings/page.tsx       # Settings page (server component)
-│   │   ├── journal/page.tsx        # Journal (static content)
-│   │   └── gallery/page.tsx        # Gallery (static content)
+│   │   ├── journal/page.tsx        # Journal page (static content)
+│   │   └── gallery/page.tsx        # Gallery page (static content)
 │   │
 │   └── api/
 │       ├── chat/route.ts           # POST /api/chat — decrypt key, stream from OpenRouter
@@ -66,12 +68,20 @@ src/
 │       └── auth/signout/route.ts   # POST /api/auth/signout
 │
 ├── components/
-│   ├── chat/ChatClient.tsx         # Full chat UI (streaming, input, new chat) — brat-aware via props
-│   └── settings/SettingsClient.tsx # Settings form (avatar upload, key entry) — user-global, not per-brat
+│   ├── AuthStatus.tsx              # Header auth controls (sign in / sign out)
+│   ├── BratHeader.tsx              # Brat-aware header wiring
+│   ├── BratNav.tsx                 # Brat section navigation
+│   ├── HeaderShell.tsx             # Shared header layout shell
+│   ├── chat/
+│   │   └── ChatClient.tsx          # Full chat UI (streaming, input, new chat) — brat-aware via props
+│   └── settings/
+│       └── SettingsClient.tsx      # Global user settings form
 │
 ├── lib/
+│   ├── brat-nav.ts                 # Brat navigation link builder
 │   ├── crypto.ts                   # AES-256-GCM helpers for API keys and message history
-│   ├── summarize.ts                # Conversation summarization helpers (trigger, slice, OpenRouter call)
+│   ├── models.ts                   # Shared chat model allowlist/labels
+│   ├── summarize.ts                # Conversation summarization helpers
 │   └── supabase/
 │       ├── client.ts               # Browser Supabase client
 │       └── server.ts               # Server Supabase client (SSR, cookies)
@@ -79,12 +89,16 @@ src/
 ├── content/
 │   ├── brats/
 │   │   ├── index.ts                # Canonical companion metadata (slug, name, portrait…)
+│   │   ├── about.ts                # Registry-backed about content loader
+│   │   ├── gallery.ts              # Registry-backed gallery content loader
+│   │   ├── journal.ts              # Registry-backed journal content loader
 │   │   └── getSystemPrompt.ts      # Prompt builder registry — maps slug → builder function
 │   └── aria/
 │       ├── system-prompt.md        # Aria's character and behavior (canonical)
 │       ├── buildSystemPrompt.ts    # Reads system-prompt.md, injects variables
 │       ├── about.ts                # Aria's tagline and bio
-│       └── journal.json            # Journal entries
+│       ├── gallery.ts              # Aria gallery content
+│       └── journal.json            # Aria journal entries
 
 supabase/
 └── migrations/
