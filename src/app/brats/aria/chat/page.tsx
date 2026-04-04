@@ -83,23 +83,19 @@ async function getOrCreateSession(
   userId: string,
   bratSlug: string
 ) {
-  const { data: existing } = await supabase
+  // Atomic upsert: inserts if no row exists, otherwise updates nothing meaningful
+  // (user_id and brat_slug are already correct) and returns the existing row.
+  // The unique constraint on (user_id, brat_slug) makes this race-safe — two
+  // concurrent requests will both succeed and return the same session id.
+  const { data, error } = await supabase
     .from("chat_sessions")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("brat_slug", bratSlug)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (existing) return existing;
-
-  const { data: created, error } = await supabase
-    .from("chat_sessions")
-    .insert({ user_id: userId, brat_slug: bratSlug })
+    .upsert(
+      { user_id: userId, brat_slug: bratSlug },
+      { onConflict: "user_id,brat_slug" }
+    )
     .select("id")
     .single();
 
-  if (error || !created) throw new Error("Failed to create chat session");
-  return created;
+  if (error || !data) throw new Error("Failed to get or create chat session");
+  return data;
 }

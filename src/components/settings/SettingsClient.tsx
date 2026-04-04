@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { MODELS } from "@/lib/models";
 
 type InitialValues = {
   displayName: string;
@@ -10,11 +11,6 @@ type InitialValues = {
   hasApiKey: boolean;
   openrouterModel: string;
 };
-
-const MODELS = [
-  { value: "x-ai/grok-4.1-fast", label: "Grok 4.1 Fast (default)" },
-  { value: "deepseek/deepseek-v3.2", label: "DeepSeek V3.2" },
-];
 
 export default function SettingsClient({
   userId,
