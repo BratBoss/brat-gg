@@ -116,7 +116,7 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={busy}
-              className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder-[#4a5e4c] text-base sm:text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors disabled:opacity-50"
+              className="w-full px-4 py-3 rounded-md bg-[#161d17] border border-[#2a3a2c] text-[#d6e4d2] placeholder:text-[#d6e4d2]/55 text-base sm:text-sm focus:outline-none focus:border-[#5e7d5a] transition-colors disabled:opacity-50"
             />
 
             {(error || urlError === "auth_failed") && (
