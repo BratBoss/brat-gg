@@ -383,7 +383,7 @@ export async function POST(request: Request) {
       console.error("[brat.gg] Stream error:", streamErr);
       try {
         await writer.write(
-          encoder.encode(`data: ${JSON.stringify({ bratgg_error: clientMsg })}\n\n`)
+          encoder.encode(`event: bratgg_error\ndata: ${JSON.stringify({ message: clientMsg })}\n\n`)
         );
       } catch {
         // writer may already be in an error state; best-effort only

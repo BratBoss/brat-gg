@@ -182,6 +182,10 @@ export default function ChatClient({
 
       const decoder = new TextDecoder();
       let lineBuffer = "";
+      // Tracks the SSE event type set by an `event:` field line. Persists
+      // across read() calls (chunks may split across field lines) and resets
+      // on blank lines (SSE message boundaries) per the SSE spec.
+      let pendingEventType = "";
 
       while (true) {
         const { done, value } = await reader.read();
@@ -199,6 +203,14 @@ export default function ChatClient({
         lineBuffer = lines.pop() ?? "";
 
         for (const line of lines) {
+          if (line === "") {
+            pendingEventType = ""; // blank line = SSE message boundary
+            continue;
+          }
+          if (line.startsWith("event: ")) {
+            pendingEventType = line.slice(7).trim();
+            continue;
+          }
           if (line.startsWith("data: ")) {
             const data = line.slice(6).trimEnd();
             if (data === "[DONE]") continue;
@@ -211,10 +223,10 @@ export default function ChatClient({
               continue;
             }
 
-            // The server sends { bratgg_error } when OpenRouter reports a
+            // The server emits `event: bratgg_error` when OpenRouter reports a
             // mid-stream error or the inactivity watchdog fires server-side.
-            if (json.bratgg_error) {
-              throw new Error(json.bratgg_error as string);
+            if (pendingEventType === "bratgg_error") {
+              throw new Error((json.message as string) ?? "Stream error — please try again.");
             }
 
             const delta = json.choices?.[0]?.delta?.content ?? "";
@@ -226,16 +238,15 @@ export default function ChatClient({
 
       // Flush any remaining buffered line after the read loop ends
       // (guards against a final SSE event that arrives without a trailing newline).
+      // bratgg_error events always end with \n\n so they won't appear here.
       if (lineBuffer.startsWith("data: ")) {
         const data = lineBuffer.slice(6).trimEnd();
         if (data && data !== "[DONE]") {
           try {
             const json = JSON.parse(data);
-            if (!json.bratgg_error) {
-              const delta = json.choices?.[0]?.delta?.content ?? "";
-              fullContent += delta;
-              setStreamingContent(fullContent);
-            }
+            const delta = json.choices?.[0]?.delta?.content ?? "";
+            fullContent += delta;
+            setStreamingContent(fullContent);
           } catch {
             // skip malformed
           }
