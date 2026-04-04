@@ -19,7 +19,6 @@ V1 ships one companion: Aria.
 **Out of scope / deferred:**
 - Multiple active chat sessions per user
 - Additional companions (Marcy, Sylvie)
-- CORS
 
 ---
 
@@ -337,5 +336,4 @@ Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_K
 | Feature | Notes |
 |---|---|
 | Additional companions | Dynamic brat routes and slug infrastructure are already in place. Marcy and Sylvie currently have placeholder metadata/assets, but no registered about/gallery/journal/system-prompt content and are not yet enabled as active companions. |
-| CORS | Security improvement |
 | Per-user crypto model for sensitive data | Replace the current shared-key approach with a robust, elegant encryption architecture that handles messages, history summaries, and stored user API keys together while improving per-user isolation and reducing blast radius. |
