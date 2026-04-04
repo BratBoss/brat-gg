@@ -14,11 +14,7 @@ const ALGORITHM = "aes-256-gcm";
 // crypto degradation is worse than a loud startup failure.
 // ---------------------------------------------------------------
 
-/**
- * Thrown when a required encryption env var is absent or malformed.
- * This is a deployment/configuration error — not a user error.
- * API routes should respond with 500 and a generic message.
- */
+/** Deployment misconfiguration (missing/malformed env var). API routes should 500, not 422. */
 export class ConfigError extends Error {
   constructor(message: string) {
     super(message);
@@ -54,28 +50,17 @@ function getMessageKey(): Buffer {
   return getKeyFor("MESSAGE_ENCRYPTION_KEY");
 }
 
-/**
- * Call this at server startup (e.g. from instrumentation.ts) to
- * catch a missing or malformed ENCRYPTION_SECRET before any request
- * is served, rather than on the first user interaction that needs it.
- */
+/** Call at server startup (instrumentation.ts) to fail fast on missing/malformed ENCRYPTION_SECRET. */
 export function assertEncryptionConfigured(): void {
   getKey(); // throws ConfigError if misconfigured
 }
 
-/**
- * Call this at server startup to catch a missing or malformed
- * MESSAGE_ENCRYPTION_KEY before any request is served.
- */
+/** Call at server startup (instrumentation.ts) to fail fast on missing/malformed MESSAGE_ENCRYPTION_KEY. */
 export function assertMessageEncryptionConfigured(): void {
   getMessageKey(); // throws ConfigError if misconfigured
 }
 
-/**
- * Encrypts a plaintext string using AES-256-GCM.
- * Returns a colon-separated string: iv:authTag:ciphertext (all hex-encoded).
- * Throws ConfigError if ENCRYPTION_SECRET is absent or malformed.
- */
+/** AES-256-GCM encrypt with ENCRYPTION_SECRET. Returns "iv:authTag:ciphertext" (hex). */
 export function encryptSecret(plaintext: string): string {
   const key = getKey();
   const iv = randomBytes(12); // 96-bit IV — GCM standard
@@ -88,11 +73,7 @@ export function encryptSecret(plaintext: string): string {
   return `${iv.toString("hex")}:${tag.toString("hex")}:${encrypted.toString("hex")}`;
 }
 
-/**
- * Decrypts a value produced by encryptSecret.
- * Throws ConfigError if ENCRYPTION_SECRET is absent or malformed.
- * Throws a plain Error if the stored value is malformed or the auth tag fails.
- */
+/** Decrypt a value from encryptSecret. ConfigError on bad key; plain Error on malformed value. */
 export function decryptSecret(stored: string): string {
   const key = getKey(); // ConfigError propagates as-is
   const parts = stored.split(":");
@@ -117,11 +98,7 @@ export function decryptSecret(stored: string): string {
 
 const ENC_PREFIX = "enc:";
 
-/**
- * Encrypts a message content string using AES-256-GCM.
- * Returns "enc:iv:authTag:ciphertext" (all hex-encoded).
- * Throws ConfigError if MESSAGE_ENCRYPTION_KEY is absent or malformed.
- */
+/** AES-256-GCM encrypt with MESSAGE_ENCRYPTION_KEY. Returns "enc:iv:authTag:ciphertext" (hex). */
 export function encryptMessage(plaintext: string): string {
   const key = getMessageKey();
   const iv = randomBytes(12); // 96-bit IV — GCM standard
@@ -134,12 +111,7 @@ export function encryptMessage(plaintext: string): string {
   return `${ENC_PREFIX}${iv.toString("hex")}:${tag.toString("hex")}:${encrypted.toString("hex")}`;
 }
 
-/**
- * Decrypts a message content string produced by encryptMessage.
- *
- * Throws if the stored value is not in the expected encrypted format,
- * if MESSAGE_ENCRYPTION_KEY is absent or malformed, or if the auth tag fails.
- */
+/** Decrypt a value from encryptMessage. Throws if format invalid, key bad, or auth tag fails. */
 export function decryptMessage(stored: string): string {
   if (!stored.startsWith(ENC_PREFIX)) {
     throw new Error("Stored message is not in encrypted format");
