@@ -322,3 +322,4 @@ Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_K
 | Multiple chat sessions per user | Currently one session per user per brat (latest wins). No UI for session history. |
 | Additional companions | Placeholder assets for Marcy and Sylvie exist in `public/images/brats/`. No routes, content, or sessions. |
 | CORS | Security improvement |
+| Per-user crypto model for sensitive data | Replace the current shared-key approach with a robust, elegant encryption architecture that handles messages, history summaries, and stored user API keys together while improving per-user isolation and reducing blast radius. |
