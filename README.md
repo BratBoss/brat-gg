@@ -47,78 +47,79 @@ V1 ships two companions: Aria and Marcy.
 ## Project structure (high level)
 
 ```
+public/
+├── .well-known/security.txt        # Security disclosure contact + policy
+├── site.webmanifest                # Web app manifest
+├── og-image.jpg                    # Shared social preview image
+├── favicon-*.png                   # Browser favicons
+├── apple-touch-icon.png            # Apple touch icon
+└── images/
+    ├── aria/                       # Aria portrait + gallery assets
+    ├── marcy/gallery/              # Marcy gallery assets
+    └── brats/                      # Shared brat portrait assets (Marcy, Sylvie)
+
 src/
-├── proxy.ts                        # Session cookie refresh (Next.js middleware)
-├── instrumentation.ts              # Startup: validates ENCRYPTION_SECRET and MESSAGE_ENCRYPTION_KEY
+├── proxy.ts                        # Session cookie refresh (Next.js proxy)
+├── instrumentation.ts              # Startup validation for crypto env vars
 │
 ├── app/
-│   ├── layout.tsx                  # Root layout
+│   ├── layout.tsx                  # Root layout + shared metadata
 │   ├── page.tsx                    # Home (/)
+│   ├── globals.css                 # Global styles and theme tokens
 │   ├── favicon.ico                 # App Router favicon
-│   ├── globals.css                 # Global styles
+│   ├── not-found.tsx               # Custom 404 page
+│   ├── error.tsx                   # Custom route error page
+│   ├── robots.ts                   # robots.txt generation
+│   ├── sitemap.ts                  # sitemap.xml generation
 │   ├── login/page.tsx              # Magic link / OAuth login
 │   ├── settings/page.tsx           # Global user settings page
 │   ├── auth/callback/route.ts      # Supabase auth callback
-│   │
-│   ├── brats/[slug]/
-│   │   ├── layout.tsx              # Shared brat section layout/header
-│   │   ├── page.tsx                # Brat profile / glade overview
-│   │   ├── chat/page.tsx           # Chat page (server component, loads session)
-│   │   ├── journal/page.tsx        # Journal page (static content)
-│   │   └── gallery/page.tsx        # Gallery page (static content)
-│   │
-│   └── api/
-│       ├── chat/route.ts           # POST /api/chat — decrypt key, stream from OpenRouter
-│       ├── settings/route.ts       # POST /api/settings — encrypt + save key, update profile
-│       └── auth/signout/route.ts   # POST /api/auth/signout
+│   ├── api/
+│   │   ├── chat/route.ts           # POST /api/chat
+│   │   ├── settings/route.ts       # POST /api/settings
+│   │   └── auth/signout/route.ts   # POST /api/auth/signout
+│   └── brats/[slug]/
+│       ├── layout.tsx              # Shared brat section layout/header
+│       ├── page.tsx                # Brat landing / profile page
+│       ├── chat/page.tsx           # Chat page (server component, loads session)
+│       ├── journal/page.tsx        # Journal page
+│       └── gallery/page.tsx        # Gallery page
 │
 ├── components/
-│   ├── AuthStatus.tsx              # Header auth controls (sign in / sign out)
+│   ├── AuthStatus.tsx              # Header auth controls
 │   ├── BratHeader.tsx              # Brat-aware header wiring
 │   ├── BratNav.tsx                 # Brat section navigation
 │   ├── HeaderShell.tsx             # Shared header layout shell
-│   ├── chat/
-│   │   └── ChatClient.tsx          # Full chat UI (streaming, input, new chat) — brat-aware via props
-│   └── settings/
-│       └── SettingsClient.tsx      # Global user settings form
-│
-├── lib/
-│   ├── brat-nav.ts                 # Brat navigation link builder
-│   ├── crypto.ts                   # AES-256-GCM helpers for API keys and message history
-│   ├── models.ts                   # Shared chat model allowlist/labels
-│   ├── summarize.ts                # Conversation summarization helpers
-│   ├── supabase/
-│   │   ├── client.ts               # Browser Supabase client
-│   │   └── server.ts               # Server Supabase client (SSR, cookies)
-│   └── chat/
-│       ├── openrouter.ts           # Shared OPENROUTER_API_URL constant
-│       ├── keys.ts                 # decryptApiKey — BYOK key decryption with typed failure kinds
-│       ├── history.ts              # recoverHistorySummary, loadDecryptedHistory, refreshSummaryIfNeeded
-│       ├── context.ts              # buildContextMessages — context window construction
-│       ├── stream.ts               # streamOpenRouterChat — SSE pipe, inactivity watchdog, persist on close
-│       └── __tests__/
-│           ├── context.test.ts     # Unit tests: orphan-message invariant, summary/no-summary paths
-│           └── history.test.ts     # Unit tests: watermark-reset, DB-sync, failed-refresh safety
+│   ├── chat/ChatClient.tsx         # Full chat UI
+│   └── settings/SettingsClient.tsx # Settings form UI
 │
 ├── content/
 │   ├── brats/
-│   │   ├── index.ts                # Canonical companion metadata (slug, name, portrait…)
-│   │   ├── about.ts                # Registry-backed about content loader
-│   │   ├── gallery.ts              # Registry-backed gallery content loader
-│   │   ├── journal.ts              # Registry-backed journal content loader
-│   │   └── getSystemPrompt.ts      # Prompt builder registry — maps slug → builder function
-│   ├── aria/
-│   │   ├── system-prompt.md        # Aria's character and behavior (canonical)
-│   │   ├── buildSystemPrompt.ts    # Reads system-prompt.md, injects variables
-│   │   ├── about.ts                # Aria's tagline and bio
-│   │   ├── gallery.ts              # Aria gallery content
-│   │   └── journal.json            # Aria journal entries
-│   └── marcy/
-│       ├── system-prompt.md        # Marcy's character and behavior (canonical)
-│       ├── buildSystemPrompt.ts    # Reads system-prompt.md, injects variables
-│       ├── about.ts                # Marcy's tagline and bio
-│       ├── gallery.ts              # Marcy gallery content (placeholder)
-│       └── journal.json            # Marcy journal entries
+│   │   ├── index.ts                # Canonical brat metadata
+│   │   ├── about.ts                # About-content registry
+│   │   ├── gallery.ts              # Gallery-content registry
+│   │   ├── journal.ts              # Journal-content registry
+│   │   └── getSystemPrompt.ts      # Prompt-builder registry
+│   ├── aria/                       # Aria content + prompt source
+│   └── marcy/                      # Marcy content + prompt source
+│
+└── lib/
+    ├── brat-nav.ts                 # Brat nav link builder
+    ├── crypto.ts                   # AES-256-GCM helpers
+    ├── models.ts                   # Shared model allowlist/labels
+    ├── summarize.ts                # Conversation summarization helpers
+    ├── supabase/
+    │   ├── client.ts               # Browser Supabase client
+    │   └── server.ts               # Server Supabase client
+    └── chat/
+        ├── openrouter.ts           # Shared OpenRouter API URL constant
+        ├── keys.ts                 # BYOK key decryption + typed failures
+        ├── history.ts              # Summary recovery, history load, summary refresh
+        ├── context.ts              # Context-window construction
+        ├── stream.ts               # SSE streaming + persistence
+        └── __tests__/
+            ├── context.test.ts     # Context-window invariant tests
+            └── history.test.ts     # Summary/history invariant tests
 
 supabase/
 └── migrations/
