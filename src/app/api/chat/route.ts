@@ -10,11 +10,14 @@ import { streamOpenRouterChat } from "@/lib/chat/stream";
 import { OPENROUTER_API_URL } from "@/lib/chat/openrouter";
 
 export async function POST(request: Request) {
+  // TIMING INSTRUMENTATION — remove after diagnosis
+  const _t0 = Date.now();
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  console.log(`[brat.gg perf] auth: ${Date.now() - _t0}ms`);
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -34,6 +37,7 @@ export async function POST(request: Request) {
     .eq("id", sessionId)
     .eq("user_id", user.id)
     .single();
+  console.log(`[brat.gg perf] session row: ${Date.now() - _t0}ms`);
 
   if (!sessionRow) {
     return NextResponse.json({ error: "Session not found" }, { status: 404 });
@@ -53,6 +57,7 @@ export async function POST(request: Request) {
     .select("openrouter_api_key, openrouter_model, display_name")
     .eq("id", user.id)
     .single();
+  console.log(`[brat.gg perf] profile: ${Date.now() - _t0}ms`);
 
   // BYOK: missing key is normal for new users (422, not 500).
   if (!profile?.openrouter_api_key) {
@@ -90,9 +95,11 @@ export async function POST(request: Request) {
     role: "user",
     content: encryptMessage(message),
   });
+  console.log(`[brat.gg perf] msg insert: ${Date.now() - _t0}ms`);
 
   // Load history including the message just persisted.
   const chatMessages = await loadDecryptedHistory(supabase, sessionId);
+  console.log(`[brat.gg perf] history loaded (${chatMessages.length} msgs): ${Date.now() - _t0}ms`);
 
   // Refresh summary if enough messages aged out. On failure, chat continues with stale/null summary.
   ({ historySummary, lastSummarizedCount } = await refreshSummaryIfNeeded(supabase, {
@@ -104,6 +111,7 @@ export async function POST(request: Request) {
     model,
     companionName,
   }));
+  console.log(`[brat.gg perf] summary refresh: ${Date.now() - _t0}ms`);
 
   const systemPrompt = buildSystemPrompt({
     userName: profile.display_name ?? null,
@@ -120,6 +128,7 @@ export async function POST(request: Request) {
 
   const streamAbortController = new AbortController();
 
+  console.log(`[brat.gg perf] → fetch OpenRouter at ${Date.now() - _t0}ms`);
   const orResponse = await fetch(OPENROUTER_API_URL, {
     method: "POST",
     headers: {
@@ -140,6 +149,7 @@ export async function POST(request: Request) {
     const err = await orResponse.text().catch(() => "Unknown error");
     return NextResponse.json({ error: `OpenRouter error: ${err}` }, { status: 502 });
   }
+  console.log(`[brat.gg perf] OpenRouter headers received: ${Date.now() - _t0}ms`);
 
   const readable = streamOpenRouterChat(orResponse, sessionId, streamAbortController);
 
