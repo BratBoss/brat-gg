@@ -1,11 +1,13 @@
 export type GalleryImage = {
   src: string;
   alt: string;
+  width: number;
+  height: number;
 };
 
 export const ariaGallery: GalleryImage[] = [
-  { src: "/images/aria/gallery/1.JPG", alt: "Aria — gallery 1" },
-  { src: "/images/aria/gallery/2.JPG", alt: "Aria — gallery 2" },
-  { src: "/images/aria/gallery/3.JPG", alt: "Aria — gallery 3" },
-  { src: "/images/aria/gallery/4.JPG", alt: "Aria — gallery 4" },
+  { src: "/images/aria/gallery/1.jpg", alt: "Aria — gallery 1", width: 1638, height: 2048 },
+  { src: "/images/aria/gallery/2.jpg", alt: "Aria — gallery 2", width: 1638, height: 2048 },
+  { src: "/images/aria/gallery/3.jpg", alt: "Aria — gallery 3", width: 1638, height: 2048 },
+  { src: "/images/aria/gallery/4.jpg", alt: "Aria — gallery 4", width: 1638, height: 2048 },
 ];
