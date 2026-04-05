@@ -26,6 +26,7 @@ export default async function AuthStatus({
   ) : (
     <Link
       href={loginHref}
+      prefetch={false}
       className={authLinkClass}
     >
       Sign in
