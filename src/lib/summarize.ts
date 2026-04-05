@@ -3,7 +3,7 @@
 // Incremental: each refresh passes only newly aged-out messages + previous summary,
 // bounding input regardless of conversation length. Stored encrypted (encryptMessage).
 
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+import { OPENROUTER_API_URL } from "@/lib/chat/openrouter";
 
 /** Most-recent messages kept as raw context alongside the summary. */
 export const LIVE_WINDOW = 20;
