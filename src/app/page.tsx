@@ -62,6 +62,7 @@ export default function HomePage() {
               <Link
                 key={brat.slug}
                 href={`/brats/${brat.slug}`}
+                prefetch={false}
                 className="group relative overflow-hidden rounded-lg border border-[var(--th-border)] bg-[var(--th-surface)] hover:border-[var(--th-accent)] transition-colors duration-300"
               >
                 <BratCard brat={brat} />
