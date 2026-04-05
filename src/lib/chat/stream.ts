@@ -44,18 +44,9 @@ export function streamOpenRouterChat(
     try {
       resetInactivityTimer();
 
-      // TIMING INSTRUMENTATION — remove after diagnosis
-      let _firstChunk = true;
-      const _streamStart = Date.now();
-
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
-        if (_firstChunk) {
-          console.log(`[brat.gg perf] first chunk from OpenRouter: ${Date.now() - _streamStart}ms after stream start`);
-          _firstChunk = false;
-        }
 
         resetInactivityTimer();
 
