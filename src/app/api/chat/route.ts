@@ -65,7 +65,18 @@ export async function POST(request: Request) {
 
   // ConfigError → 500 (deployment misconfiguration); plain Error → 422 (malformed stored key).
   const keyResult = decryptApiKey(profile.openrouter_api_key);
-  if (!keyResult.ok) return keyResult.response;
+  if (!keyResult.ok) {
+    if (keyResult.kind === "config_error") {
+      return NextResponse.json(
+        { error: "Server configuration error. Please contact the administrator." },
+        { status: 500 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Could not read your API key. Please re-enter it in Settings." },
+      { status: 422 }
+    );
+  }
   const decryptedApiKey = keyResult.key;
 
   const model = profile.openrouter_model ?? "x-ai/grok-4.1-fast";

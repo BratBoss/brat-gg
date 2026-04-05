@@ -1,14 +1,13 @@
 import { decryptSecret, ConfigError } from "@/lib/crypto";
-import { NextResponse } from "next/server";
 
 export type DecryptKeyResult =
   | { ok: true; key: string }
-  | { ok: false; response: NextResponse };
+  | { ok: false; kind: "config_error" | "malformed_key" };
 
 /**
  * Decrypts the stored BYOK API key.
- * ConfigError → 500 (deployment misconfiguration — ENCRYPTION_SECRET missing/malformed).
- * Plain Error → 422 (malformed stored key — user must re-enter in Settings).
+ * ConfigError → kind "config_error" (deployment misconfiguration — caller should 500).
+ * Plain Error → kind "malformed_key" (bad stored value — caller should 422).
  */
 export function decryptApiKey(encryptedKey: string): DecryptKeyResult {
   try {
@@ -16,20 +15,8 @@ export function decryptApiKey(encryptedKey: string): DecryptKeyResult {
   } catch (err) {
     if (err instanceof ConfigError) {
       console.error("[brat.gg] ENCRYPTION_SECRET misconfiguration:", (err as Error).message);
-      return {
-        ok: false,
-        response: NextResponse.json(
-          { error: "Server configuration error. Please contact the administrator." },
-          { status: 500 }
-        ),
-      };
+      return { ok: false, kind: "config_error" };
     }
-    return {
-      ok: false,
-      response: NextResponse.json(
-        { error: "Could not read your API key. Please re-enter it in Settings." },
-        { status: 422 }
-      ),
-    };
+    return { ok: false, kind: "malformed_key" };
   }
 }
