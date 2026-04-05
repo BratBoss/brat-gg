@@ -97,9 +97,18 @@ src/
 │   ├── crypto.ts                   # AES-256-GCM helpers for API keys and message history
 │   ├── models.ts                   # Shared chat model allowlist/labels
 │   ├── summarize.ts                # Conversation summarization helpers
-│   └── supabase/
-│       ├── client.ts               # Browser Supabase client
-│       └── server.ts               # Server Supabase client (SSR, cookies)
+│   ├── supabase/
+│   │   ├── client.ts               # Browser Supabase client
+│   │   └── server.ts               # Server Supabase client (SSR, cookies)
+│   └── chat/
+│       ├── openrouter.ts           # Shared OPENROUTER_API_URL constant
+│       ├── keys.ts                 # decryptApiKey — BYOK key decryption with typed failure kinds
+│       ├── history.ts              # recoverHistorySummary, loadDecryptedHistory, refreshSummaryIfNeeded
+│       ├── context.ts              # buildContextMessages — context window construction
+│       ├── stream.ts               # streamOpenRouterChat — SSE pipe, inactivity watchdog, persist on close
+│       └── __tests__/
+│           ├── context.test.ts     # Unit tests: orphan-message invariant, summary/no-summary paths
+│           └── history.test.ts     # Unit tests: watermark-reset, DB-sync, failed-refresh safety
 │
 ├── content/
 │   ├── brats/
@@ -159,7 +168,8 @@ Open `http://localhost:3000`.
 ### Build check
 
 ```bash
-npm run build
+npm run build   # Turbopack production build + TypeScript check
+npm run test    # Vitest unit tests (src/lib/chat/__tests__/)
 ```
 
 The build runs TypeScript type-checking. A separate runtime-startup check in `src/instrumentation.ts` validates `MESSAGE_ENCRYPTION_KEY` and `ENCRYPTION_SECRET` — this is distinct from the build step.
@@ -278,15 +288,16 @@ Browser (ChatClient)
       → auth check (Supabase)
       → verify session belongs to user
       → load encrypted API key from profiles
-      → decrypt key (AES-256-GCM)
+      → decrypt key — lib/chat/keys.ts (ConfigError → 500, malformed → 422)
       → resolve prompt builder by brat_slug (400 if unsupported companion)
+      → recover history summary + watermark — lib/chat/history.ts (decrypt failure resets watermark to 0)
       → persist user message to messages table (encrypted at rest)
-      → load conversation history and decrypt server-side
-      → refresh conversation summary if threshold reached (blocking, before model call)
+      → load conversation history and decrypt — lib/chat/history.ts
+      → refresh conversation summary if threshold reached — lib/chat/history.ts (failure never blocks request; watermark only advances on DB write success)
       → build system prompt via resolved builder (reads companion's system-prompt.md, injects user name + date + summary)
-      → build context window: all unsummarized messages (from watermark to end) when summary exists, else trim to 50
+      → build context window — lib/chat/context.ts (watermark-anchored when summary exists, else trim to 50; both paths enforce no orphaned assistant turn at window start)
       → POST to OpenRouter (stream: true)
-      → pipe SSE stream back to browser
+      → pipe SSE stream back to browser — lib/chat/stream.ts (inactivity watchdog; bratgg_error SSE on failure; partial content discarded)
       → after stream ends: persist assistant message to messages table (encrypted at rest)
   ← SSE stream (text/event-stream)
 Browser
