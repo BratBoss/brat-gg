@@ -13,6 +13,7 @@ export default async function BratHeader({ brat }: { brat: BratMeta }) {
       left={
         <Link
           href="/"
+          prefetch={false}
           className="text-[var(--th-dim)] text-sm tracking-widest uppercase hover:text-[var(--th-text)] transition-colors"
         >
           brat.gg
