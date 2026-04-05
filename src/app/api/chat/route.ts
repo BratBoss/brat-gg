@@ -7,8 +7,7 @@ import { decryptApiKey } from "@/lib/chat/keys";
 import { recoverHistorySummary, loadDecryptedHistory, refreshSummaryIfNeeded } from "@/lib/chat/history";
 import { buildContextMessages } from "@/lib/chat/context";
 import { streamOpenRouterChat } from "@/lib/chat/stream";
-
-const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+import { OPENROUTER_API_URL } from "@/lib/chat/openrouter";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
