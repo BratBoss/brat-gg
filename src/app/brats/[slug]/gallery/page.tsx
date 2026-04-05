@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getBratBySlug } from "@/content/brats";
@@ -27,6 +28,10 @@ export async function generateMetadata({
     },
   };
 }
+
+// Grid: max-w-5xl (1024px) · px-6 (48px total padding) · gap-6 (24px) → 2 cols at sm (640px+)
+const GALLERY_SIZES =
+  "(min-width: 1024px) 476px, (min-width: 640px) calc(50vw - 36px), calc(100vw - 48px)";
 
 export default async function GalleryPage({
   params,
@@ -59,10 +64,13 @@ export default async function GalleryPage({
             rel="noreferrer"
             className="group block rounded-lg overflow-hidden border border-[var(--th-border)] bg-[var(--th-surface)] hover:border-[var(--th-accent)] transition-colors"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={img.src}
               alt={img.alt}
+              width={img.width}
+              height={img.height}
+              sizes={GALLERY_SIZES}
+              priority={i === 0}
               className="w-full h-auto block transition-transform duration-300 group-hover:scale-[1.01]"
             />
           </a>
