@@ -4,7 +4,7 @@ import AuthStatus from "@/components/AuthStatus";
 
 export default function NotFound() {
   return (
-    <main className="flex-1 flex flex-col" data-brat="home">
+    <main className="flex-1 flex flex-col" data-brat="aria">
       <HeaderShell
         left={
           <Link
@@ -34,7 +34,7 @@ export default function NotFound() {
                 You took a wrong turn somewhere in my little forest. It happens.
                 Try not to wander off too far before I have to come drag you back.
               </p>
-              <div className="pt-2 text-[var(--th-muted)] text-sm leading-relaxed">
+              <div className="pt-2 text-[var(--th-dim)] text-sm leading-relaxed">
                 <span className="text-[var(--th-accent-bright)] font-medium">Best move</span>{" "}
                 head back home before you get any more distracted.
               </div>

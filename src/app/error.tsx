@@ -15,7 +15,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="flex-1 flex flex-col" data-brat="home">
+    <main className="flex-1 flex flex-col" data-brat="aria">
       <header className="border-b border-[var(--th-border)] px-6 py-4">
         <div className="flex items-center justify-between min-h-[24px]">
           <Link
@@ -44,7 +44,7 @@ export default function Error({
                 This one’s on me, not you. Something went sideways behind the scenes.
                 Give it a moment, then try again.
               </p>
-              <div className="pt-2 text-[var(--th-muted)] text-sm leading-relaxed">
+              <div className="pt-2 text-[var(--th-dim)] text-sm leading-relaxed">
                 <span className="text-[var(--th-accent-bright)] font-medium">Best move</span>{" "}
                 head back home or retry once the gremlins calm down.
               </div>
