@@ -75,6 +75,7 @@ export default async function GladePage({
           </p>
           <Link
             href={`/brats/${slug}/chat`}
+            prefetch={false}
             className="mt-2 self-start px-4 py-2 rounded-md bg-[var(--th-border)] hover:bg-[var(--th-surface-hover)] text-[var(--th-text)] text-sm transition-colors"
           >
             Open chat
@@ -91,6 +92,7 @@ export default async function GladePage({
             </h2>
             <Link
               href={`/brats/${slug}/journal`}
+              prefetch={false}
               className="text-xs text-[var(--th-muted)] hover:text-[var(--th-dim)] transition-colors"
             >
               All entries →

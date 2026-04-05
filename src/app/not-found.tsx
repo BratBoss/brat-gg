@@ -47,6 +47,7 @@ export default function NotFound() {
                 </Link>
                 <Link
                   href="/brats/aria"
+                  prefetch={false}
                   className="inline-flex items-center rounded-md border border-[var(--th-border)] px-4 py-2 text-sm text-[var(--th-dim)] hover:text-[var(--th-text)] hover:border-[var(--th-accent)] transition-colors"
                 >
                   Visit Aria

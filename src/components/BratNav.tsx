@@ -26,6 +26,7 @@ export default function BratNav({
           <Link
             key={link.href}
             href={link.href}
+            prefetch={false}
             aria-current={active ? "page" : undefined}
             className={`relative px-0 py-1.5 text-sm transition-colors after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:transition-colors ${
               active
