@@ -1,6 +1,8 @@
 # brat.gg
 
-A small, personal website for AI companions. Each companion (“brat”) has their own space — a profile, journal, gallery, and private one-on-one chat — with user accounts, saved settings, and conversation history.
+A small multi-companion web app for AI companions.
+
+Each companion (“brat”) has their own space — profile, journal, gallery, and private one-on-one chat — with shared account infrastructure, saved user settings, encrypted conversation history, and brat-specific prompts/content.
 
 V1 ships two companions: Aria and Marcy.
 
@@ -9,27 +11,14 @@ V1 ships two companions: Aria and Marcy.
 ## V1 product scope
 
 **In scope:**
-- Passwordless auth via Supabase:
-  - magic-link email login
-  - GitHub OAuth login
+- Two fully implemented companion experiences for Aria and Marcy
 - One persistent private chat session per user per brat
-- Encrypted-at-rest conversation storage:
-  - user/assistant messages
-  - per-session history summaries
-- Streaming chat responses via OpenRouter using each user's own API key (BYOK)
-- Global user settings:
-  - display name
-  - avatar
-  - OpenRouter API key
-  - model selection
-- Private avatar storage via Supabase Storage with signed URL access
 - Dynamic brat route infrastructure under `/brats/[slug]`
-- One fully implemented companion experience for Aria:
-  - glade/profile page
-  - journal
-  - gallery
-  - chat
-- Mobile-friendly responsive layout and input behavior
+- Per-brat content and prompt infrastructure
+- Brat-scoped theme/layout support
+- Passwordless auth via Supabase with Magic Link + GitHub
+- Streaming chat responses via OpenRouter (BYOK)
+- Encrypted-at-rest conversation and user API key storage
 - Row Level Security on user data in Supabase
 
 **Out of scope / deferred:**
@@ -49,6 +38,7 @@ V1 ships two companions: Aria and Marcy.
 | AI provider | OpenRouter (via user key) | — |
 | Hosting | Vercel | — |
 | Language | TypeScript | 6.0.2 |
+| Testing | Vitest | — |
 
 **Next.js 16 note:** This version has breaking changes. `middleware.ts` is now `proxy.ts` with a `proxy` export (not `middleware`). Several `experimental` config keys have moved to top-level. If you need to change framework config, check the local Next.js docs in `node_modules/next/dist/docs/` first.
 
@@ -362,5 +352,5 @@ Use different generated values for `ENCRYPTION_SECRET` and `MESSAGE_ENCRYPTION_K
 
 | Feature | Notes |
 |---|---|
-| Additional companions | Dynamic brat routes and slug infrastructure are in place. Marcy is live as a skeleton companion (placeholder assets and system prompt). Sylvie has placeholder metadata/assets but is not yet enabled. |
+| Additional companions | Dynamic brat routes and slug infrastructure are in place. Sylvie has placeholder metadata/assets but is not yet enabled. |
 | Per-user crypto model for sensitive data | Replace the current shared-key approach with a robust, elegant encryption architecture that handles messages, history summaries, and stored user API keys together while improving per-user isolation and reducing blast radius. |
