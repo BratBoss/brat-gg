@@ -1,9 +1,4 @@
-export type GalleryImage = {
-  src: string;
-  alt: string;
-  width: number;
-  height: number;
-};
+import type { GalleryImage } from "@/content/brats/gallery";
 
 export const ariaGallery: GalleryImage[] = [
   { src: "/images/aria/gallery/1.jpg", alt: "Aria — gallery 1", width: 1638, height: 2048 },
