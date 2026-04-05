@@ -1,0 +1,8 @@
+Contact: mailto:security@brat.gg
+Contact: mailto:abuse@brat.gg
+Expires: 2026-12-31T23:59:59.000Z
+Canonical: https://brat.gg/.well-known/security.txt
+Acknowledgments: We are happy to acknowledge and credit valid vulnerability reports after coordinated remediation.
+Preferred-Languages: en
+
+Please report security vulnerabilities privately to security@brat.gg and allow time for coordinated remediation before public disclosure.
