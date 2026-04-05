@@ -77,7 +77,7 @@ brat-gg/
 │           └── sylvie.png              # Sylvie card thumbnail (placeholder)
 │
 ├── src/
-│   ├── proxy.ts                        # Session cookie refresh (Next.js proxy)
+│   ├── proxy.ts                        # Session cookie refresh (Next.js proxy/middleware)
 │   ├── instrumentation.ts              # Startup validation for crypto env vars
 │   │
 │   ├── app/
