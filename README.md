@@ -114,21 +114,21 @@ brat-gg/
 │   ├── content/
 │   │   ├── brats/
 │   │   │   ├── index.ts                # Canonical brat metadata
-│   │   │   ├── about.ts                # About-content registry
-│   │   │   ├── gallery.ts              # Gallery-content registry
-│   │   │   ├── journal.ts              # Journal-content registry
-│   │   │   └── getSystemPrompt.ts      # Prompt-builder registry
+│   │   │   ├── about.ts                # About-content registry (slug → tagline/bio)
+│   │   │   ├── gallery.ts              # Gallery-content registry (slug → image list)
+│   │   │   ├── journal.ts              # Journal-content registry (slug → journal entries)
+│   │   │   └── getSystemPrompt.ts      # Prompt-builder registry (slug → prompt builder)
 │   │   ├── aria/
-│   │   │   ├── about.ts
-│   │   │   ├── buildSystemPrompt.ts
-│   │   │   ├── gallery.ts
-│   │   │   ├── journal.json
+│   │   │   ├── about.ts                # Aria’s tagline + bio
+│   │   │   ├── buildSystemPrompt.ts.   # Reads Aria’s system-prompt.md and injects template variables
+│   │   │   ├── gallery.ts              # Aria's Gallery image list
+│   │   │   ├── journal.json            # Aria's Journal entries
 │   │   │   └── system-prompt.md        # Aria's prompt (source of truth)
 │   │   └── marcy/
-│   │       ├── about.ts
-│   │       ├── buildSystemPrompt.ts
-│   │       ├── gallery.ts
-│   │       ├── journal.json
+│   │       ├── about.ts                # Marcy’s tagline + bio
+│   │       ├── buildSystemPrompt.ts    # Reads Marcy’s system-prompt.md and injects template variables
+│   │       ├── gallery.ts.             # Marcy's Gallery image list
+│   │       ├── journal.json.           # Marcy's Journal entries
 │   │       └── system-prompt.md        # Marcy's prompt (source of truth)
 │   │
 │   └── lib/
