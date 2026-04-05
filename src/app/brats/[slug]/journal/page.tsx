@@ -11,7 +11,21 @@ export async function generateMetadata({
   const { slug } = await params;
   const brat = getBratBySlug(slug);
   if (!brat || !brat.available) return {};
-  return { title: `Journal — ${brat.name} | brat.gg` };
+
+  const description = `Read recent entries from ${brat.name}'s journal on brat.gg.`;
+
+  return {
+    title: `Journal — ${brat.name} | brat.gg`,
+    description,
+    openGraph: {
+      title: `Journal — ${brat.name} | brat.gg`,
+      description,
+    },
+    twitter: {
+      title: `Journal — ${brat.name} | brat.gg`,
+      description,
+    },
+  };
 }
 
 export default async function JournalPage({

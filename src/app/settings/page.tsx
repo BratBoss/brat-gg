@@ -5,7 +5,22 @@ import { BRATS, getBratBySlug } from "@/content/brats";
 import BratHeader from "@/components/BratHeader";
 import SettingsClient from "@/components/settings/SettingsClient";
 
-export const metadata: Metadata = { title: "Settings | brat.gg" };
+export const metadata: Metadata = {
+  title: "Settings | brat.gg",
+  description: "Manage your display name, avatar, OpenRouter key, and model preferences on brat.gg.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+  openGraph: {
+    title: "Settings | brat.gg",
+    description: "Manage your display name, avatar, OpenRouter key, and model preferences on brat.gg.",
+  },
+  twitter: {
+    title: "Settings | brat.gg",
+    description: "Manage your display name, avatar, OpenRouter key, and model preferences on brat.gg.",
+  },
+};
 
 export default async function SettingsPage({
   searchParams,

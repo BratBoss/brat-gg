@@ -13,7 +13,24 @@ export async function generateMetadata({
   const { slug } = await params;
   const brat = getBratBySlug(slug);
   if (!brat || !brat.available) return {};
-  return { title: `${brat.section ?? brat.name} — ${brat.name} | brat.gg` };
+
+  const sectionLabel = brat.section ?? brat.name;
+  const description = brat.slug === "marcy"
+    ? `Visit ${brat.name}'s ${sectionLabel.toLowerCase()} — a warmer, lived-in corner of brat.gg for conversation, journal entries, and gallery moments.`
+    : `Step into ${brat.name}'s ${sectionLabel.toLowerCase()} — a quiet, personal space for conversation, journal entries, and gallery moments.`;
+
+  return {
+    title: `${sectionLabel} — ${brat.name} | brat.gg`,
+    description,
+    openGraph: {
+      title: `${sectionLabel} — ${brat.name} | brat.gg`,
+      description,
+    },
+    twitter: {
+      title: `${sectionLabel} — ${brat.name} | brat.gg`,
+      description,
+    },
+  };
 }
 
 export default async function GladePage({

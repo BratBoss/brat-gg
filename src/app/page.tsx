@@ -1,7 +1,21 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import AuthStatus from "@/components/AuthStatus";
 import HeaderShell from "@/components/HeaderShell";
 import { BRATS, type BratMeta } from "@/content/brats";
+
+export const metadata: Metadata = {
+  title: "brat.gg",
+  description: "A quiet home for digital companions.",
+  openGraph: {
+    title: "brat.gg",
+    description: "A quiet home for digital companions.",
+  },
+  twitter: {
+    title: "brat.gg",
+    description: "A quiet home for digital companions.",
+  },
+};
 
 const brats = BRATS;
 
