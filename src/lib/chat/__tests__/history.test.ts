@@ -77,7 +77,7 @@ function makeSupabase(updateError: unknown = null) {
   return {
     from: vi.fn().mockReturnValue({ update: updateFn }),
     _updateFn: updateFn,
-  } as ReturnType<typeof makeSupabase>;
+  };
 }
 
 const BASE_ARGS = {
